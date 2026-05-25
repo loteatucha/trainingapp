@@ -127,6 +127,13 @@
     font-variant-numeric: tabular-nums; }
   .repeat-btn:hover, .repeat-btn:active { background: rgba(96, 165, 250, 0.25); }
 
+  /* Yoga "class" card (Today view) */
+  .class-card { background: var(--surface-2); border: 1px solid var(--border); border-radius: 12px;
+    padding: 16px; margin: 4px 0 12px; text-align: center; }
+  .class-card .class-title { font-size: 18px; font-weight: 600; color: var(--ink); margin-bottom: 6px; }
+  .class-card .class-notes { font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+  .class-card .class-hint { font-size: 11px; color: var(--accent); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600; }
+
   /* Per-exercise history sheet */
   .ex-name.tappable { cursor: pointer; }
   .ex-name.tappable:active { color: var(--accent); }
@@ -276,20 +283,10 @@
   .icon-btn { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 16px; padding: 4px 8px; border-radius: 6px; transition: color .15s, background .15s; }
   .icon-btn:hover { color: var(--skip); background: rgba(248, 113, 113, 0.14); }
 
-  /* Running cards */
-  .run-card { background: var(--surface-2); border: 1px solid var(--border); border-radius: 12px; padding: 12px; margin: 8px 0; }
-  .run-card .run-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
-  .run-card .run-meta { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; flex: 1; min-width: 0; }
-  .run-card .run-tag { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
-  .run-card .run-mini { width: 40px; padding: 5px 6px; border: 1px solid var(--border); border-radius: 8px; font: inherit; font-size: 13px; background: var(--card); color: var(--ink); text-align: center; }
-  .run-card .run-type { flex: 1; min-width: 100px; padding: 5px 10px; border: 1px solid var(--border); border-radius: 8px; font: inherit; font-size: 13px; background: var(--card); color: var(--ink); font-weight: 600; }
-  .run-card .run-body { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-  .run-card .run-field { display: flex; flex-direction: column; gap: 3px; }
-  .run-card .run-field label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
-  .run-card .run-field input { width: 100%; padding: 6px 8px; border: 1px solid var(--border); border-radius: 8px; font: inherit; font-size: 13px; background: var(--card); color: var(--ink); }
-  .run-card .run-note { margin-top: 10px; }
-  .run-card .run-note input { width: 100%; padding: 6px 10px; border: 1px solid var(--border); border-radius: 8px; font: inherit; font-size: 12px; color: var(--muted); font-style: italic; background: var(--card); }
-  .run-card input:focus { outline: none; border-color: var(--accent); }
+  /* Routine box (Plan tab — one per workout type) */
+  .routine-box { padding: 12px 14px; }
+  .routine-emoji { font-size: 22px; line-height: 1; flex: 0 0 auto; }
+  .routine-box .plan-day-summary { padding: 4px 0; }
 
   /* Editable block name */
   .block-name-input { background: transparent; border: 1px solid transparent; font: inherit; font-size: 11px; font-weight: 700;
@@ -404,17 +401,17 @@
 const DEFAULT_SCHEDULE = {
   // dow 1..7 = Mon..Sun
   1: { type: 'gym',  dayIdx: 0 },
-  2: { type: 'run',  planDay: 1 },
+  2: { type: 'run',  variant: 'intervals' },
   3: { type: 'gym',  dayIdx: 1 },
   4: { type: 'swim' },
   5: { type: 'gym',  dayIdx: 2 },
-  6: { type: 'run',  planDay: 2 },
+  6: { type: 'run',  variant: 'long' },
   7: { type: 'yoga' }
 };
 
-const DEFAULT_STRENGTH = [
+const DEFAULT_GYM = [
   {
-    name: 'Strength Day 1',
+    name: 'Gym · Day 1',
     blocks: [
       { name: 'Mobility', exercises: [
         { id: 'd1-dorsi',   name: 'Dorsiflexion',           prescription: '2 × 10' },
@@ -441,7 +438,7 @@ const DEFAULT_STRENGTH = [
     ]
   },
   {
-    name: 'Strength Day 2',
+    name: 'Gym · Day 2',
     blocks: [
       { name: 'Mobility', exercises: [
         { id: 'd2-rb',      name: 'Adductor Rockback',      prescription: '2 × 10' },
@@ -468,7 +465,7 @@ const DEFAULT_STRENGTH = [
     ]
   },
   {
-    name: 'Strength Day 3',
+    name: 'Gym · Day 3',
     blocks: [
       { name: 'Mobility', exercises: [
         { id: 'd3-thorax',  name: 'Thoracic + Hip Flexor',  prescription: '2 × 10' },
@@ -496,16 +493,26 @@ const DEFAULT_STRENGTH = [
   }
 ];
 
-const DEFAULT_RUNNING = [
-  { week:1, day:1, type:'Intervals',   ec:"15'", work:'30"', recovery:"1:30'", reps:'6', vc:"10'", total:"37'", note:'Hard 30s each!' },
-  { week:1, day:2, type:'Progressive', ec:"45'", work:"5'",  recovery:'',     reps:'',  vc:'',    total:"50'", note:'Last 5 min faster, sustained' },
-  { week:2, day:1, type:'Intervals',   ec:"15'", work:'30"', recovery:"1:30'", reps:'8', vc:"10'", total:"41'", note:'' },
-  { week:2, day:2, type:'Progressive', ec:"45'", work:"10'", recovery:'',     reps:'',  vc:'',    total:"55'", note:'Last 10 min hard' },
-  { week:3, day:1, type:'Intervals',   ec:"10'", work:"1'",  recovery:"2'",   reps:'6', vc:"10'", total:"38'", note:'' },
-  { week:3, day:2, type:'Threshold',   ec:"15'", work:"5'",  recovery:"2'",   reps:'3', vc:"10'", total:"46'", note:'3 × 5min comfortably uncomfortable' },
-  { week:4, day:1, type:'Intervals',   ec:"10'", work:"1'",  recovery:"1:30'", reps:'8', vc:"10'", total:"40'", note:'' },
-  { week:4, day:2, type:'Easy',        ec:"10' + strides", work:"45'", recovery:'', reps:'', vc:'', total:"60'", note:'Warm up with strides, then easy' }
-];
+const DEFAULT_RUN_INTERVALS = {
+  name: 'Running · Intervals',
+  blocks: [
+    { name: 'Session', exercises: [
+      { id: 'ri-wu',   name: 'Warmup',     prescription: '15 min easy', note: '' },
+      { id: 'ri-work', name: 'Main set',   prescription: '6 × 30s hard', note: '1:30 easy between intervals' },
+      { id: 'ri-cd',   name: 'Cooldown',   prescription: '10 min easy', note: '' }
+    ]}
+  ]
+};
+
+const DEFAULT_RUN_LONG = {
+  name: 'Running · Long',
+  blocks: [
+    { name: 'Session', exercises: [
+      { id: 'rl-wu',   name: 'Warmup',  prescription: '10 min easy', note: '' },
+      { id: 'rl-main', name: 'Long run', prescription: '45 min',     note: 'Aerobic pace; last 5 min stronger' }
+    ]}
+  ]
+};
 
 const DEFAULT_SWIM = {
   name: 'Aerobic swim',
@@ -523,22 +530,8 @@ const DEFAULT_SWIM = {
 };
 
 const DEFAULT_YOGA = {
-  name: 'Mobility & yoga',
-  blocks: [
-    { name: 'Stability + core', exercises: [
-      { id: 'yo-dead', name: 'Dead bug',         prescription: '2 × 10', note: '' },
-      { id: 'yo-bird', name: 'Bird dog',         prescription: '2 × 10', note: 'With band tension' }
-    ]},
-    { name: 'Hips', exercises: [
-      { id: 'yo-9090', name: '90/90 thoracic',   prescription: '2 × 10', note: 'Both sides' },
-      { id: 'yo-add',  name: 'Adductor rockback', prescription: '2 × 10', note: '' },
-      { id: 'yo-floss', name: 'Sciatic nerve floss', prescription: '2 × 10', note: 'Both sides' }
-    ]},
-    { name: 'Calves + feet', exercises: [
-      { id: 'yo-dorsi', name: 'Dorsiflexion',    prescription: '2 × 10', note: '' },
-      { id: 'yo-toe',   name: 'Toe off',         prescription: '2 × 10', note: '' }
-    ]}
-  ]
+  name: 'Yoga / Mobility / Pilates',
+  notes: 'Class — just log when complete.'
 };
 
 // ============================================================
@@ -556,13 +549,24 @@ function loadState() {
   } catch (e) {}
   if (!s) s = {};
   s.logs = s.logs || {};
-  s.scheduleOverrides = s.scheduleOverrides || {};   // { weekISO: { dow: workout } }
-  s.runningWeek = s.runningWeek || 1;
-  s.customStrength = s.customStrength || null;        // null = use default
-  s.customRunning  = s.customRunning  || null;        // null = use default
-  s.customSwim     = s.customSwim     || null;        // null = use default
-  s.customYoga     = s.customYoga     || null;        // null = use default
-  s.viewISO = null; // not persisted — set on init
+  s.scheduleOverrides = s.scheduleOverrides || {};
+  // Migrate older keys
+  if (s.customStrength && !s.customGym) {
+    s.customGym = s.customStrength;
+    delete s.customStrength;
+  }
+  if (s.customRunning) delete s.customRunning;        // old week×day array — discarded
+  if (s.runningWeek)   delete s.runningWeek;          // no longer used
+  // Old yoga had blocks — migrate to simple { name, notes }
+  if (s.customYoga && Array.isArray(s.customYoga.blocks)) {
+    s.customYoga = { name: s.customYoga.name || DEFAULT_YOGA.name, notes: '' };
+  }
+  s.customGym          = s.customGym          || null;
+  s.customRunIntervals = s.customRunIntervals || null;
+  s.customRunLong      = s.customRunLong      || null;
+  s.customSwim         = s.customSwim         || null;
+  s.customYoga         = s.customYoga         || null;
+  s.viewISO = null;
   return s;
 }
 function saveState() {
@@ -572,10 +576,12 @@ function saveState() {
   } catch (e) {}
 }
 
-function getStrength() { return state.customStrength || DEFAULT_STRENGTH; }
-function getRunning()  { return state.customRunning  || DEFAULT_RUNNING; }
-function getSwim()     { return state.customSwim     || DEFAULT_SWIM; }
-function getYoga()     { return state.customYoga     || DEFAULT_YOGA; }
+function getGym()          { return state.customGym          || DEFAULT_GYM; }
+function getRunIntervals() { return state.customRunIntervals || DEFAULT_RUN_INTERVALS; }
+function getRunLong()      { return state.customRunLong      || DEFAULT_RUN_LONG; }
+function getRunRoutine(variant) { return variant === 'long' ? getRunLong() : getRunIntervals(); }
+function getSwim()         { return state.customSwim         || DEFAULT_SWIM; }
+function getYoga()         { return state.customYoga         || DEFAULT_YOGA; }
 
 function todayISO() {
   const d = new Date();
@@ -627,17 +633,17 @@ function resetWeekOverrides(iso) {
 
 function workoutLabel(w) {
   if (!w) return '—';
-  if (w.type === 'gym')  return 'Strength · Day ' + (w.dayIdx + 1);
-  if (w.type === 'run')  return 'Running · ' + (w.planDay === 1 ? 'Session 1 (Intervals)' : 'Session 2 (Long)');
-  if (w.type === 'swim') return 'Swimming';
-  if (w.type === 'yoga') return 'Yoga / Mobility';
+  if (w.type === 'gym')  return 'Gym · Day ' + (w.dayIdx + 1);
+  if (w.type === 'run')  return 'Running · ' + (w.variant === 'long' ? 'Long' : 'Intervals');
+  if (w.type === 'swim') return 'Swim · Day 1';
+  if (w.type === 'yoga') return getYoga().name || 'Yoga / Mobility';
   if (w.type === 'rest') return 'Rest';
   return 'Workout';
 }
 function workoutShort(w) {
   if (!w) return '—';
   if (w.type === 'gym')  return 'Gym ' + (w.dayIdx + 1);
-  if (w.type === 'run')  return 'Run ' + (w.planDay || 1);
+  if (w.type === 'run')  return w.variant === 'long' ? 'Run Long' : 'Run Int.';
   if (w.type === 'swim') return 'Swim';
   if (w.type === 'yoga') return 'Yoga';
   if (w.type === 'rest') return 'Rest';
@@ -655,24 +661,24 @@ function workoutEmoji(w) {
 function workoutSubLabel(w) {
   if (!w) return '';
   if (w.type === 'gym') return 'Day ' + ((w.dayIdx || 0) + 1);
-  if (w.type === 'run') return 'S' + (w.planDay || 1);
+  if (w.type === 'run') return w.variant === 'long' ? 'Long' : 'Intervals';
   return '';
 }
 
 const WORKOUT_OPTIONS = [
-  { key: 'gym-0',  workout: { type:'gym', dayIdx:0 } },
-  { key: 'gym-1',  workout: { type:'gym', dayIdx:1 } },
-  { key: 'gym-2',  workout: { type:'gym', dayIdx:2 } },
-  { key: 'run-1',  workout: { type:'run', planDay:1 } },
-  { key: 'run-2',  workout: { type:'run', planDay:2 } },
-  { key: 'swim',   workout: { type:'swim' } },
-  { key: 'yoga',   workout: { type:'yoga' } },
-  { key: 'rest',   workout: { type:'rest' } }
+  { key: 'gym-0',         workout: { type: 'gym', dayIdx: 0 } },
+  { key: 'gym-1',         workout: { type: 'gym', dayIdx: 1 } },
+  { key: 'gym-2',         workout: { type: 'gym', dayIdx: 2 } },
+  { key: 'run-intervals', workout: { type: 'run', variant: 'intervals' } },
+  { key: 'run-long',      workout: { type: 'run', variant: 'long' } },
+  { key: 'swim',          workout: { type: 'swim' } },
+  { key: 'yoga',          workout: { type: 'yoga' } },
+  { key: 'rest',          workout: { type: 'rest' } }
 ];
 function keyOf(w) {
   if (!w) return '';
   if (w.type === 'gym') return 'gym-' + w.dayIdx;
-  if (w.type === 'run') return 'run-' + w.planDay;
+  if (w.type === 'run') return 'run-' + (w.variant || 'intervals');
   return w.type;
 }
 
@@ -756,7 +762,7 @@ function renderToday(iso) {
   if (sched.type === 'gym') {
     renderGymBody(body, sched.dayIdx, iso, log, updateProgress);
   } else if (sched.type === 'run') {
-    renderRunBody(body, sched.planDay, iso, log, updateProgress);
+    renderRunBody(body, sched.variant, iso, log, updateProgress);
   } else if (sched.type === 'swim') {
     renderSwimBody(body, iso, log, updateProgress);
   } else if (sched.type === 'yoga') {
@@ -803,16 +809,16 @@ function renderToday(iso) {
 
 function computeTodayProgress(sched, log) {
   const w = log.workout;
-  if (sched.type === 'gym' || sched.type === 'swim' || sched.type === 'yoga') {
-    const routine = sched.type === 'gym' ? getStrength()[sched.dayIdx]
+  if (sched.type === 'gym' || sched.type === 'swim' || sched.type === 'run') {
+    const routine = sched.type === 'gym'  ? getGym()[sched.dayIdx]
                   : sched.type === 'swim' ? getSwim()
-                  : getYoga();
+                  : getRunRoutine(sched.variant);
     const exs = (routine && routine.blocks) ? routine.blocks.flatMap(b => b.exercises) : [];
     const total = exs.length;
     const done = w && w.completed ? Object.values(w.completed).filter(Boolean).length : 0;
     return { pct: total ? Math.round(done/total*100) : 0, label: `${done} of ${total} exercises complete` };
   }
-  if (sched.type === 'run') {
+  if (sched.type === 'yoga') {
     const isDone = (w && w.status === 'done');
     return { pct: isDone ? 100 : 0, label: isDone ? 'Session complete' : 'Session pending' };
   }
@@ -1028,9 +1034,9 @@ function renderRoutineExercises(container, routine, iso, log, opts) {
 }
 
 function renderGymBody(container, dayIdx, iso, log, onChange) {
-  const day = getStrength()[dayIdx];
+  const day = getGym()[dayIdx];
   if (!day) {
-    container.appendChild(el('div', 'muted', 'No strength day defined.'));
+    container.appendChild(el('div', 'muted', 'No gym day defined.'));
     return;
   }
   const w = ensureWorkout(log, { type: 'gym' });
@@ -1439,48 +1445,14 @@ function makeSetRow(s, i, timeBased, lastSet) {
   return row;
 }
 
-function renderRunBody(container, planDay, iso, log, onChange) {
+function renderRunBody(container, variant, iso, log, onChange) {
   const w = ensureWorkout(log, { type: 'run' });
-  const week = state.runningWeek || 1;
-  const session = getRunning().find(r => +r.week === +week && +r.day === +planDay);
-
-  // Week picker
-  const picker = el('div', 'row'); picker.style.marginBottom = '10px';
-  picker.appendChild(el('span', 'muted', 'Plan week'));
-  [1,2,3,4].forEach(n => {
-    const b = el('button', 'btn small' + (n === week ? ' primary' : ''), String(n));
-    b.addEventListener('click', () => { state.runningWeek = n; saveState(); renderToday(iso); });
-    picker.appendChild(b);
-  });
-  container.appendChild(picker);
+  const routine = getRunRoutine(variant);
 
   const lastRun = lastTypeSession('run', iso);
   if (lastRun) appendLastSession(container, lastRun, iso, 'run');
 
-  if (session) {
-    container.appendChild(el('div', 'muted', `Week ${week}, day ${planDay} — ${session.type}`));
-    const grid = el('div', 'cardio-block');
-    const cells = [
-      ['Warmup', session.ec],
-      ['Work',   session.work],
-      ['Recovery', session.recovery || '—'],
-      ['Reps',   session.reps ? '× ' + session.reps : '—'],
-      ['Cooldown', session.vc || '—'],
-      ['Total',  session.total]
-    ];
-    cells.forEach(([l,v]) => {
-      const c = el('div', 'cardio-cell');
-      c.appendChild(el('div', 'label', l));
-      c.appendChild(el('div', 'value', v || '—'));
-      grid.appendChild(c);
-    });
-    container.appendChild(grid);
-    if (session.note) container.appendChild(el('div', 'ex-note', session.note));
-  } else {
-    container.appendChild(el('div', 'muted', 'No prescribed session for this week — log what you did.'));
-  }
-
-  // Inputs
+  // Session-level fields
   const fields = w.fields;
   const ig = el('div', 'input-grid');
   ig.appendChild(field('distance', 'Distance (km)', fields.distance, v => { fields.distance = v; saveState(); }));
@@ -1488,7 +1460,10 @@ function renderRunBody(container, planDay, iso, log, onChange) {
   ig.appendChild(field('avgPace', 'Avg pace', fields.avgPace, v => { fields.avgPace = v; saveState(); }, 'text'));
   ig.appendChild(field('rpe',     'RPE (1–10)',    fields.rpe,     v => { fields.rpe = v;      saveState(); }));
   container.appendChild(ig);
-  container.appendChild(notesArea(w));
+
+  // Routine segments (checklist style — no per-exercise sets)
+  renderRoutineExercises(container, routine, iso, log, { trackSets: false, onChange });
+  container.appendChild(notesArea(w, 'Session notes'));
 }
 
 function renderSwimBody(container, iso, log, onChange) {
@@ -1509,15 +1484,22 @@ function renderSwimBody(container, iso, log, onChange) {
 
 function renderYogaBody(container, iso, log, onChange) {
   const w = ensureWorkout(log, { type: 'yoga' });
+  const yoga = getYoga();
   const lastYoga = lastTypeSession('yoga', iso);
   if (lastYoga) appendLastSession(container, lastYoga, iso, 'yoga');
+
+  // Class label
+  const cls = el('div', 'class-card');
+  cls.appendChild(el('div', 'class-title', yoga.name));
+  if (yoga.notes) cls.appendChild(el('div', 'class-notes', yoga.notes));
+  cls.appendChild(el('div', 'class-hint', 'No exercises to track — just log when complete.'));
+  container.appendChild(cls);
 
   const ig = el('div', 'input-grid');
   ig.appendChild(field('duration', 'Duration (min)', w.fields.duration, v => { w.fields.duration = v; saveState(); }));
   ig.appendChild(field('rpe', 'Felt (1–10)', w.fields.rpe, v => { w.fields.rpe = v; saveState(); }));
   container.appendChild(ig);
 
-  renderRoutineExercises(container, getYoga(), iso, log, { trackSets: false, onChange });
   container.appendChild(notesArea(w, 'Session notes'));
 }
 
@@ -1926,72 +1908,52 @@ function renderEditableRoutine(container, routine, onMutate) {
   container.appendChild(addBlockBtn);
 }
 
-function renderEditableRunCard(session, idx) {
-  const card = el('div', 'run-card');
+function renderRoutineBox(emoji, routine, onMutate, opts) {
+  opts = opts || {};
+  const card = el('div', 'card routine-box');
+  const dets = document.createElement('details');
+  if (opts.open) dets.open = true;
 
-  const head = el('div', 'run-head');
-  const meta = el('div', 'run-meta');
+  const sum = document.createElement('summary');
+  sum.className = 'plan-day-summary';
+  sum.appendChild(el('span', 'routine-emoji', emoji));
 
-  meta.appendChild(el('span', 'run-tag', 'Wk'));
-  const wkInp = document.createElement('input');
-  wkInp.className = 'run-mini'; wkInp.value = session.week ?? ''; wkInp.inputMode = 'numeric';
-  wkInp.addEventListener('input', () => { state.customRunning[idx].week = wkInp.value; saveState(); });
-  meta.appendChild(wkInp);
+  const nameInp = document.createElement('input');
+  nameInp.className = 'routine-name-input';
+  nameInp.value = routine.name;
+  nameInp.addEventListener('click', e => e.stopPropagation());
+  nameInp.addEventListener('input', () => { routine.name = nameInp.value; saveState(); });
+  sum.appendChild(nameInp);
+  dets.appendChild(sum);
 
-  meta.appendChild(el('span', 'run-tag', 'Day'));
-  const dayInp = document.createElement('input');
-  dayInp.className = 'run-mini'; dayInp.value = session.day ?? ''; dayInp.inputMode = 'numeric';
-  dayInp.addEventListener('input', () => { state.customRunning[idx].day = dayInp.value; saveState(); });
-  meta.appendChild(dayInp);
-
-  const typeInp = document.createElement('input');
-  typeInp.className = 'run-type';
-  typeInp.value = session.type || ''; typeInp.placeholder = 'Type (Intervals, Easy…)';
-  typeInp.addEventListener('input', () => { state.customRunning[idx].type = typeInp.value; saveState(); });
-  meta.appendChild(typeInp);
-
-  head.appendChild(meta);
-
-  const del = el('button', 'icon-btn', '✕');
-  del.title = 'Delete session';
-  del.addEventListener('click', () => {
-    if (!confirm('Delete this running session?')) return;
-    state.customRunning.splice(idx, 1); saveState(); renderPlan();
-  });
-  head.appendChild(del);
-  card.appendChild(head);
-
-  const body = el('div', 'run-body');
-  const fieldDefs = [
-    ['ec', 'Warmup'], ['work', 'Work'], ['recovery', 'Recovery'],
-    ['reps', 'Reps'], ['vc', 'Cooldown'], ['total', 'Total']
-  ];
-  fieldDefs.forEach(([key, label]) => {
-    const wrap = el('div', 'run-field');
-    wrap.appendChild(el('label', null, label));
-    const inp = document.createElement('input');
-    inp.value = session[key] || '';
-    inp.addEventListener('input', () => { state.customRunning[idx][key] = inp.value; saveState(); });
-    wrap.appendChild(inp);
-    body.appendChild(wrap);
-  });
-  card.appendChild(body);
-
-  const noteRow = el('div', 'run-note');
-  const noteInp = document.createElement('input');
-  noteInp.value = session.note || ''; noteInp.placeholder = 'Notes (optional)';
-  noteInp.addEventListener('input', () => { state.customRunning[idx].note = noteInp.value; saveState(); });
-  noteRow.appendChild(noteInp);
-  card.appendChild(noteRow);
-
+  renderEditableRoutine(dets, routine, onMutate);
+  card.appendChild(dets);
   return card;
 }
 
-function renderPlanSectionReset(container, label, resetFn) {
-  const btn = el('button', 'btn small ghost danger', label);
-  btn.style.marginTop = '10px';
-  btn.addEventListener('click', resetFn);
-  container.appendChild(btn);
+function renderYogaBox(yoga) {
+  const card = el('div', 'card routine-box');
+  const head = el('div', 'plan-section-head');
+  head.appendChild(el('span', 'routine-emoji', '🧘'));
+  const nameInp = document.createElement('input');
+  nameInp.className = 'routine-name-input';
+  nameInp.value = yoga.name;
+  nameInp.addEventListener('input', () => { yoga.name = nameInp.value; saveState(); });
+  head.appendChild(nameInp);
+  card.appendChild(head);
+
+  card.appendChild(el('div', 'muted', 'Class — no exercises to track. Just mark complete when done.'));
+
+  const notes = el('div', 'full-input');
+  notes.appendChild(el('label', 'muted', 'Notes (optional)'));
+  const ta = document.createElement('textarea');
+  ta.placeholder = 'Class name, location, focus area…';
+  ta.value = yoga.notes || '';
+  ta.addEventListener('input', () => { yoga.notes = ta.value; saveState(); });
+  notes.appendChild(ta);
+  card.appendChild(notes);
+
+  return card;
 }
 
 function renderPlan() {
@@ -1999,110 +1961,46 @@ function renderPlan() {
   root.innerHTML = '';
 
   // Auto-init customs so editing is always live
-  if (!state.customStrength) { state.customStrength = JSON.parse(JSON.stringify(DEFAULT_STRENGTH)); saveState(); }
-  if (!state.customRunning)  { state.customRunning  = JSON.parse(JSON.stringify(DEFAULT_RUNNING));  saveState(); }
-  if (!state.customSwim)     { state.customSwim     = JSON.parse(JSON.stringify(DEFAULT_SWIM));     saveState(); }
-  if (!state.customYoga)     { state.customYoga     = JSON.parse(JSON.stringify(DEFAULT_YOGA));     saveState(); }
+  if (!state.customGym)          { state.customGym          = JSON.parse(JSON.stringify(DEFAULT_GYM));          saveState(); }
+  if (!state.customRunIntervals) { state.customRunIntervals = JSON.parse(JSON.stringify(DEFAULT_RUN_INTERVALS)); saveState(); }
+  if (!state.customRunLong)      { state.customRunLong      = JSON.parse(JSON.stringify(DEFAULT_RUN_LONG));      saveState(); }
+  if (!state.customSwim)         { state.customSwim         = JSON.parse(JSON.stringify(DEFAULT_SWIM));         saveState(); }
+  if (!state.customYoga)         { state.customYoga         = JSON.parse(JSON.stringify(DEFAULT_YOGA));         saveState(); }
 
-  // === STRENGTH ===
-  const sCard = el('div', 'card');
-  sCard.appendChild(el('h2', null, '🏋️ Strength routines'));
-  state.customStrength.forEach((day, dIdx) => {
-    const dets = document.createElement('details');
-    dets.open = dIdx === 0;
-    const sum = document.createElement('summary');
-    sum.className = 'plan-day-summary';
-    const nameInp = document.createElement('input');
-    nameInp.className = 'routine-name-input';
-    nameInp.value = day.name;
-    nameInp.addEventListener('click', e => e.stopPropagation());
-    nameInp.addEventListener('input', () => { day.name = nameInp.value; saveState(); });
-    sum.appendChild(nameInp);
-    const delDayBtn = el('button', 'icon-btn', '✕');
-    delDayBtn.title = 'Delete this day';
-    delDayBtn.addEventListener('click', e => {
-      e.stopPropagation(); e.preventDefault();
-      if (!confirm(`Delete "${day.name}" entirely?`)) return;
-      state.customStrength.splice(dIdx, 1);
-      saveState(); renderPlan();
-    });
-    sum.appendChild(delDayBtn);
-    dets.appendChild(sum);
+  // Intro
+  const intro = el('div', 'card');
+  intro.appendChild(el('h2', null, 'Week routines'));
+  intro.appendChild(el('div', 'muted', 'The 7 templates you can train on. Tap any to edit. The Week tab decides which day they fall on.'));
+  root.appendChild(intro);
 
-    renderEditableRoutine(dets, day, () => { saveState(); renderPlan(); });
-    sCard.appendChild(dets);
+  // 1–3: Gym days
+  state.customGym.forEach((day, dIdx) => {
+    root.appendChild(renderRoutineBox('🏋️', day, () => { saveState(); renderPlan(); }, { open: dIdx === 0 }));
   });
-  const addDayBtn = el('button', 'btn small ghost', '+ add strength day');
-  addDayBtn.style.marginTop = '10px';
-  addDayBtn.addEventListener('click', () => {
-    const n = state.customStrength.length + 1;
-    state.customStrength.push({ name: `Strength Day ${n}`, blocks: [{ name: 'Block 1', exercises: [] }] });
+  // 4: Run Intervals
+  root.appendChild(renderRoutineBox('🏃', state.customRunIntervals, () => { saveState(); renderPlan(); }));
+  // 5: Run Long
+  root.appendChild(renderRoutineBox('🏃', state.customRunLong, () => { saveState(); renderPlan(); }));
+  // 6: Swim
+  root.appendChild(renderRoutineBox('🏊', state.customSwim, () => { saveState(); renderPlan(); }));
+  // 7: Yoga (simplified)
+  root.appendChild(renderYogaBox(state.customYoga));
+
+  // Global reset
+  const resetCard = el('div', 'card');
+  const resetBtn = el('button', 'btn small ghost danger', 'Reset all routines to defaults');
+  resetBtn.addEventListener('click', () => {
+    if (!confirm('Discard all custom routines and reset to defaults?')) return;
+    state.customGym = null;
+    state.customRunIntervals = null;
+    state.customRunLong = null;
+    state.customSwim = null;
+    state.customYoga = null;
     saveState(); renderPlan();
+    toast('All routines reset');
   });
-  sCard.appendChild(addDayBtn);
-  renderPlanSectionReset(sCard, 'Reset strength to default', () => {
-    if (confirm('Discard custom strength routines?')) {
-      state.customStrength = null; saveState(); renderPlan(); toast('Strength reset');
-    }
-  });
-  root.appendChild(sCard);
-
-  // === RUNNING ===
-  const rCard = el('div', 'card');
-  rCard.appendChild(el('h2', null, '🏃 Running plan'));
-  state.customRunning.forEach((session, idx) => {
-    rCard.appendChild(renderEditableRunCard(session, idx));
-  });
-  const addRunBtn = el('button', 'btn small ghost', '+ add session');
-  addRunBtn.style.marginTop = '10px';
-  addRunBtn.addEventListener('click', () => {
-    const lastWeek = state.customRunning.length ? (parseInt(state.customRunning[state.customRunning.length-1].week) || 1) : 1;
-    state.customRunning.push({ week: lastWeek, day: 1, type: 'Easy', ec: '', work: '', recovery: '', reps: '', vc: '', total: '', note: '' });
-    saveState(); renderPlan();
-  });
-  rCard.appendChild(addRunBtn);
-  renderPlanSectionReset(rCard, 'Reset running to default', () => {
-    if (confirm('Discard custom running plan?')) {
-      state.customRunning = null; saveState(); renderPlan(); toast('Running reset');
-    }
-  });
-  root.appendChild(rCard);
-
-  // === SWIM ===
-  const swCard = el('div', 'card');
-  swCard.appendChild(el('h2', null, '🏊 Swimming'));
-  const swNameWrap = el('div', 'row'); swNameWrap.style.margin = '6px 0 8px';
-  const swNameInp = document.createElement('input');
-  swNameInp.className = 'routine-name-input';
-  swNameInp.value = state.customSwim.name;
-  swNameInp.addEventListener('input', () => { state.customSwim.name = swNameInp.value; saveState(); });
-  swNameWrap.appendChild(swNameInp);
-  swCard.appendChild(swNameWrap);
-  renderEditableRoutine(swCard, state.customSwim, () => { saveState(); renderPlan(); });
-  renderPlanSectionReset(swCard, 'Reset swim to default', () => {
-    if (confirm('Discard custom swim routine?')) {
-      state.customSwim = null; saveState(); renderPlan(); toast('Swim reset');
-    }
-  });
-  root.appendChild(swCard);
-
-  // === YOGA ===
-  const yCard = el('div', 'card');
-  yCard.appendChild(el('h2', null, '🧘 Yoga / Mobility'));
-  const yNameWrap = el('div', 'row'); yNameWrap.style.margin = '6px 0 8px';
-  const yNameInp = document.createElement('input');
-  yNameInp.className = 'routine-name-input';
-  yNameInp.value = state.customYoga.name;
-  yNameInp.addEventListener('input', () => { state.customYoga.name = yNameInp.value; saveState(); });
-  yNameWrap.appendChild(yNameInp);
-  yCard.appendChild(yNameWrap);
-  renderEditableRoutine(yCard, state.customYoga, () => { saveState(); renderPlan(); });
-  renderPlanSectionReset(yCard, 'Reset yoga to default', () => {
-    if (confirm('Discard custom yoga routine?')) {
-      state.customYoga = null; saveState(); renderPlan(); toast('Yoga reset');
-    }
-  });
-  root.appendChild(yCard);
+  resetCard.appendChild(resetBtn);
+  root.appendChild(resetCard);
 }
 
 // ============================================================
@@ -2117,10 +2015,10 @@ function buildEntrySnapshot(iso, sched, w) {
     notes: w.notes || '',
     fields: { ...(w.fields || {}) }
   };
-  const routine = sched.type === 'gym' ? getStrength()[sched.dayIdx]
-                : sched.type === 'swim' ? getSwim()
-                : sched.type === 'yoga' ? getYoga()
-                : null;
+  let routine = null;
+  if (sched.type === 'gym')  routine = getGym()[sched.dayIdx];
+  else if (sched.type === 'swim') routine = getSwim();
+  else if (sched.type === 'run')  routine = getRunRoutine(sched.variant);
   if (routine && routine.blocks) {
     snap.exercises = routine.blocks.flatMap(b => b.exercises.map(ex => ({
       block: b.name,
@@ -2166,6 +2064,9 @@ function entryStats(entry) {
     exs.forEach(e => (e.sets||[]).forEach(s => { const v = parseFloat(s.rpe); if (!isNaN(v)) { rs+=v; rn++; } }));
     if (rn) out.push(`RPE ${(rs/rn).toFixed(1)}`);
   } else if (w.type === 'run') {
+    const exs = w.snapshot?.exercises || [];
+    const completed = exs.filter(e => e.completed).length;
+    if (exs.length) out.push(`${completed}/${exs.length} segments`);
     const f = w.fields || {};
     if (f.distance) out.push(`${f.distance} km`);
     if (f.duration) out.push(`${f.duration} min`);
@@ -2180,9 +2081,6 @@ function entryStats(entry) {
     if (f.duration) out.push(`${f.duration} min`);
     if (f.rpe)      out.push(`RPE ${f.rpe}`);
   } else if (w.type === 'yoga') {
-    const exs = w.snapshot?.exercises || [];
-    const completed = exs.filter(e => e.completed).length;
-    if (exs.length) out.push(`${completed}/${exs.length} exercises`);
     const f = w.fields || {};
     if (f.duration) out.push(`${f.duration} min`);
     if (f.rpe)      out.push(`Felt ${f.rpe}`);
