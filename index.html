@@ -138,29 +138,46 @@
   .full-input textarea { resize: vertical; min-height: 70px; }
   textarea::placeholder, input::placeholder { color: var(--muted); opacity: 0.6; }
 
-  /* Week view */
-  .week-strip { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
-  .day-card { background: var(--surface-2); border: 1px solid var(--border); border-radius: 12px; padding: 8px 4px;
-    text-align: center; transition: transform 80ms ease, border-color .15s; position: relative; }
-  .day-card:hover { transform: translateY(-1px); border-color: var(--border-strong); }
-  .day-card.today { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
-  .day-card-tap { cursor: pointer; }
-  .day-card .dow { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
-  .day-card .dnum { font-size: 16px; font-weight: 700; margin-top: 2px; color: var(--ink); }
-  .day-card .icon { font-size: 26px; line-height: 1.1; margin: 6px 0 0; }
-  .day-card .sub { font-size: 10px; color: var(--muted); min-height: 12px; margin-top: 2px; }
-  .day-card .day-status { position: absolute; top: 4px; right: 6px; font-size: 13px; line-height: 1; font-weight: 700; }
-  .day-card .day-status.done { color: var(--done); }
-  .day-card .day-status.skipped { color: var(--skip); }
-  .day-card .day-edit { display: block; width: 100%; padding: 5px 4px; margin-top: 8px;
-    background: var(--surface-3); color: var(--accent); font-size: 10px; font-weight: 700;
-    letter-spacing: 0.1em; text-align: center; border-radius: 8px; cursor: pointer;
-    transition: background .15s; border: 1px solid var(--border); user-select: none; }
-  .day-card .day-edit:hover { background: var(--accent-soft); }
-  .day-card.swap-source { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent); }
-  .day-card.swap-source .day-card-tap { opacity: 0.6; }
-  .day-card.swap-target { cursor: pointer; }
-  .day-card.swap-target:hover { border-color: var(--accent); background: rgba(96, 165, 250, 0.12); }
+  /* Week view — vertical day rows (Trello-style) */
+  .week-list { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+  .day-row { display: grid; grid-template-columns: 54px 1fr 36px; gap: 12px;
+    background: var(--surface-2); border: 1px solid var(--border); border-radius: 12px;
+    padding: 12px; align-items: center; cursor: pointer;
+    transition: transform .12s ease, border-color .15s, background .15s, box-shadow .15s; }
+  .day-row:hover { border-color: var(--border-strong); }
+  .day-row.today { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
+  .day-row.completed { background: rgba(52, 211, 153, 0.08); border-color: rgba(52, 211, 153, 0.25); }
+  .day-row.skipped { opacity: 0.6; }
+
+  .day-row .day-date { display: flex; flex-direction: column; align-items: center; gap: 2px;
+    padding-right: 12px; border-right: 1px solid var(--border); }
+  .day-row .day-date .dow { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; }
+  .day-row .day-date .dnum { font-size: 22px; font-weight: 700; color: var(--ink); line-height: 1; font-variant-numeric: tabular-nums; }
+  .day-row.today .day-date .dnum { color: var(--accent); }
+
+  .day-row .day-workout { display: flex; align-items: center; gap: 12px; min-width: 0; }
+  .day-row .day-workout .icon { font-size: 28px; line-height: 1; flex: 0 0 auto; }
+  .day-row .day-workout .info { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+  .day-row .day-workout .name { font-size: 15px; font-weight: 600; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .day-row .day-workout .sub { font-size: 11px; color: var(--muted); white-space: nowrap; }
+  .day-row .day-workout .sub.done { color: var(--done); font-weight: 600; }
+  .day-row .day-workout .sub.skipped { color: var(--skip); font-weight: 600; }
+
+  .day-row .drag-handle { display: flex; align-items: center; justify-content: center;
+    color: var(--muted); font-size: 18px; cursor: grab; touch-action: none;
+    user-select: none; min-height: 44px; min-width: 36px; border-radius: 8px;
+    transition: color .15s, background .15s; font-weight: 700; letter-spacing: -2px; }
+  .day-row .drag-handle:hover { color: var(--accent); background: var(--surface-3); }
+  .day-row .drag-handle:active { cursor: grabbing; color: var(--accent); }
+
+  /* Drag-and-drop states */
+  .day-row.dragging-source { opacity: 0.35; }
+  .day-row.drag-over { background: var(--accent-soft); border-color: var(--accent); transform: scale(1.015); }
+  .day-row.swap-source { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent); }
+
+  .dragging-ghost { position: fixed; pointer-events: none; z-index: 2000;
+    transform: rotate(1.5deg); box-shadow: 0 16px 40px rgba(0,0,0,0.6);
+    opacity: 0.95; left: 0; top: 0; }
 
   /* Swap mode banner */
   .swap-banner { display: flex; align-items: center; justify-content: space-between; gap: 12px;
@@ -311,16 +328,14 @@
   .wheel-item.selected .suffix { color: var(--accent); }
 
   @media (max-width: 480px) {
-    body { padding: 12px 10px 80px; }
-    .week-strip { grid-template-columns: repeat(7, 1fr); gap: 3px; }
-    .day-card { padding: 6px 2px; }
-    .day-card .icon { font-size: 22px; }
-    .day-card .day-swap { font-size: 9px; padding: 3px 1px; }
+    body { padding: max(12px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) max(80px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left)); }
     .topbar h1 { font-size: 21px; }
     .plan-edit-row { grid-template-columns: 1fr; }
     .plan-edit-row.three { grid-template-columns: 1fr 28px; }
     .set-cell .value { font-size: 17px; }
     .set-cell { min-height: 46px; }
+    .day-row { padding: 10px; gap: 10px; grid-template-columns: 48px 1fr 32px; }
+    .day-row .day-workout .icon { font-size: 24px; }
   }
 </style>
 </head>
@@ -1420,6 +1435,14 @@ function openWorkoutSheet(iso, handlers) {
   head.appendChild(spacer);
   sheet.appendChild(head);
 
+  if (handlers.onOpen) {
+    const openAction = el('div', 'sheet-action', '▶ Open this day');
+    openAction.style.marginTop = '0';
+    openAction.style.marginBottom = '8px';
+    openAction.addEventListener('click', () => { close(); handlers.onOpen(); });
+    sheet.appendChild(openAction);
+  }
+
   const list = el('div', 'sheet-list');
   WORKOUT_OPTIONS.forEach(opt => {
     const row = el('div', 'sheet-row' + (opt.key === currentKey ? ' selected' : ''));
@@ -1434,12 +1457,11 @@ function openWorkoutSheet(iso, handlers) {
   });
   sheet.appendChild(list);
 
-  const swapRow = el('div', 'sheet-action', '⇄ Swap with another day…');
-  swapRow.addEventListener('click', () => {
-    close();
-    handlers.onSwap();
-  });
-  sheet.appendChild(swapRow);
+  if (handlers.onSwap) {
+    const swapRow = el('div', 'sheet-action', '⇄ Swap with another day…');
+    swapRow.addEventListener('click', () => { close(); handlers.onSwap(); });
+    sheet.appendChild(swapRow);
+  }
 
   document.body.appendChild(sheet);
 
@@ -1457,6 +1479,80 @@ function openWorkoutSheet(iso, handlers) {
   });
 }
 
+// Drag-and-drop for day rows (works on touch + mouse via pointer events)
+function setupDayDrag(handle, row, iso) {
+  let drag = null;
+
+  const onPointerMove = (e) => {
+    if (!drag) return;
+    const dx = e.clientX - drag.startX;
+    const dy = e.clientY - drag.startY;
+
+    if (!drag.activated) {
+      if (Math.abs(dx) + Math.abs(dy) > 8) {
+        drag.activated = true;
+        const rect = row.getBoundingClientRect();
+        const ghost = row.cloneNode(true);
+        ghost.classList.add('dragging-ghost');
+        ghost.style.width = rect.width + 'px';
+        ghost.style.height = rect.height + 'px';
+        drag.offsetX = e.clientX - rect.left;
+        drag.offsetY = e.clientY - rect.top;
+        document.body.appendChild(ghost);
+        drag.ghost = ghost;
+        row.classList.add('dragging-source');
+      }
+    }
+
+    if (drag.activated) {
+      drag.ghost.style.left = (e.clientX - drag.offsetX) + 'px';
+      drag.ghost.style.top = (e.clientY - drag.offsetY) + 'px';
+
+      const elUnder = document.elementFromPoint(e.clientX, e.clientY);
+      const targetRow = elUnder ? elUnder.closest('.day-row') : null;
+      document.querySelectorAll('.day-row.drag-over').forEach(r => r.classList.remove('drag-over'));
+      if (targetRow && targetRow.dataset.iso && targetRow.dataset.iso !== iso) {
+        targetRow.classList.add('drag-over');
+        drag.targetISO = targetRow.dataset.iso;
+      } else {
+        drag.targetISO = null;
+      }
+    }
+  };
+
+  const onPointerUp = (e) => {
+    if (!drag) return;
+    document.removeEventListener('pointermove', onPointerMove);
+
+    const wasActivated = drag.activated;
+    const targetISO = drag.targetISO;
+
+    document.querySelectorAll('.day-row.drag-over').forEach(r => r.classList.remove('drag-over'));
+    if (drag.ghost) drag.ghost.remove();
+    row.classList.remove('dragging-source');
+    drag = null;
+
+    if (wasActivated && targetISO) {
+      const sourceSched = getEffectiveSchedule(iso);
+      const targetSched = getEffectiveSchedule(targetISO);
+      setScheduleOverride(iso, targetSched);
+      setScheduleOverride(targetISO, sourceSched);
+      if (navigator.vibrate) navigator.vibrate(15);
+      renderWeek();
+      toast('Days swapped ✓');
+    }
+  };
+
+  handle.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    drag = { startX: e.clientX, startY: e.clientY, activated: false, ghost: null, targetISO: null };
+    handle.setPointerCapture(e.pointerId);
+    document.addEventListener('pointermove', onPointerMove);
+    document.addEventListener('pointerup', onPointerUp, { once: true });
+    document.addEventListener('pointercancel', onPointerUp, { once: true });
+  });
+}
+
 function renderWeek() {
   const root = document.getElementById('tab-week');
   root.innerHTML = '';
@@ -1464,7 +1560,6 @@ function renderWeek() {
   const monday = startOfWeekISO(state.viewISO || today);
   const days = Array.from({length:7}, (_,i) => addDaysISO(monday, i));
 
-  // Swap mode banner
   if (swapSourceISO) {
     const sourceLabel = new Date(swapSourceISO + 'T12:00:00').toLocaleDateString(undefined, { weekday: 'long' });
     const banner = el('div', 'swap-banner');
@@ -1493,54 +1588,72 @@ function renderWeek() {
 
   const hint = swapSourceISO
     ? niceRange(days[0], days[6]) + ' · tap a day to complete the swap'
-    : niceRange(days[0], days[6]) + ' · tap day to log · tap EDIT to change or swap';
+    : niceRange(days[0], days[6]) + ' · tap row to change · drag ⋮⋮ to swap';
   card.appendChild(el('div', 'muted', hint));
 
-  const strip = el('div', 'week-strip'); strip.style.marginTop = '10px';
+  const list = el('div', 'week-list');
   const DOW = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
   days.forEach((iso, i) => {
     const sched = getEffectiveSchedule(iso);
     const log = state.logs[iso] || {};
-    const status = log.workout?.status || 'pending';
+    const status = log.workout && log.workout.status;
     const isSource = swapSourceISO === iso;
     const inSwapMode = !!swapSourceISO;
 
-    let classes = 'day-card';
+    let classes = 'day-row';
     if (iso === today) classes += ' today';
+    if (status === 'done') classes += ' completed';
+    if (status === 'skipped') classes += ' skipped';
     if (isSource) classes += ' swap-source';
-    if (inSwapMode && !isSource) classes += ' swap-target';
-    const dc = el('div', classes);
+    const row = el('div', classes);
+    row.dataset.iso = iso;
 
-    if (status === 'done' || status === 'skipped') {
-      dc.appendChild(el('div', 'day-status ' + status, status === 'done' ? '✓' : '×'));
+    // Date column
+    const date = el('div', 'day-date');
+    date.appendChild(el('div', 'dow', DOW[i]));
+    date.appendChild(el('div', 'dnum', String(new Date(iso+'T12:00:00').getDate())));
+    row.appendChild(date);
+
+    // Workout column
+    const wo = el('div', 'day-workout');
+    wo.appendChild(el('div', 'icon', workoutEmoji(sched)));
+    const info = el('div', 'info');
+    info.appendChild(el('div', 'name', workoutLabel(sched)));
+    if (status === 'done') {
+      info.appendChild(el('div', 'sub done', '✓ Completed'));
+    } else if (status === 'skipped') {
+      info.appendChild(el('div', 'sub skipped', '× Skipped'));
+    } else {
+      const subTxt = workoutSubLabel(sched);
+      if (subTxt) info.appendChild(el('div', 'sub', subTxt));
     }
+    wo.appendChild(info);
+    row.appendChild(wo);
 
-    const tap = el('div', 'day-card-tap');
-    tap.appendChild(el('div', 'dow', DOW[i]));
-    tap.appendChild(el('div', 'dnum', String(new Date(iso+'T12:00:00').getDate())));
-    tap.appendChild(el('div', 'icon', workoutEmoji(sched)));
-    tap.appendChild(el('div', 'sub', workoutSubLabel(sched)));
-    dc.appendChild(tap);
+    // Drag handle
+    const handle = el('div', 'drag-handle', '⋮⋮');
+    handle.title = 'Drag to swap with another day';
+    row.appendChild(handle);
 
     if (inSwapMode) {
-      // In swap mode the whole card acts as the swap target picker
-      dc.addEventListener('click', () => performSwap(iso));
+      // In swap mode the whole row acts as the swap target picker
+      row.addEventListener('click', () => performSwap(iso));
     } else {
-      tap.addEventListener('click', () => jumpToToday(iso));
-      const editPill = el('div', 'day-edit', 'EDIT');
-      editPill.addEventListener('click', (e) => {
-        e.stopPropagation();
+      // Tap row → open picker; drag handle → drag-to-swap
+      row.addEventListener('click', (e) => {
+        if (e.target.closest('.drag-handle')) return;
         openWorkoutSheet(iso, {
           onPick: (workout) => { setScheduleOverride(iso, workout); renderWeek(); },
-          onSwap: () => enterSwapMode(iso)
+          onSwap: () => enterSwapMode(iso),
+          onOpen: () => jumpToToday(iso)
         });
       });
-      dc.appendChild(editPill);
+      setupDayDrag(handle, row, iso);
     }
 
-    strip.appendChild(dc);
+    list.appendChild(row);
   });
-  card.appendChild(strip);
+  card.appendChild(list);
   root.appendChild(card);
 }
 
