@@ -159,21 +159,28 @@
   textarea::placeholder, input::placeholder { color: var(--muted); opacity: 0.6; }
 
   /* Week view — vertical day rows (Trello-style) */
-  .week-list { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
-  .day-row { display: grid; grid-template-columns: 54px 1fr 36px; gap: 12px;
-    background: var(--surface-2); border: 1px solid var(--border); border-radius: 12px;
-    padding: 12px; align-items: center; cursor: pointer;
-    transition: transform .12s ease, border-color .15s, background .15s, box-shadow .15s; }
-  .day-row:hover { border-color: var(--border-strong); }
-  .day-row.today { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
-  .day-row.completed { background: rgba(52, 211, 153, 0.08); border-color: rgba(52, 211, 153, 0.25); }
-  .day-row.skipped { opacity: 0.6; }
+  .week-list { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+  .day-row { display: grid; grid-template-columns: 54px 1fr; gap: 12px;
+    align-items: center; padding: 0; transition: transform .12s ease; }
+  .day-row.swap-source .movable-content { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent); }
 
   .day-row .day-date { display: flex; flex-direction: column; align-items: center; gap: 2px;
-    padding-right: 12px; border-right: 1px solid var(--border); }
+    padding: 4px 0; }
   .day-row .day-date .dow { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; }
   .day-row .day-date .dnum { font-size: 22px; font-weight: 700; color: var(--ink); line-height: 1; font-variant-numeric: tabular-nums; }
   .day-row.today .day-date .dnum { color: var(--accent); }
+
+  /* Movable workout card — the thing that drags */
+  .movable-content { display: grid; grid-template-columns: 1fr 36px; gap: 8px;
+    align-items: center; background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 12px; cursor: pointer;
+    transition: opacity .15s, transform .12s, background .15s, border-color .15s, box-shadow .15s; }
+  .movable-content:hover { border-color: var(--border-strong); }
+  .day-row.today .movable-content { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
+  .day-row.completed .movable-content { background: rgba(52, 211, 153, 0.08); border-color: rgba(52, 211, 153, 0.25); }
+  .day-row.skipped .movable-content { opacity: 0.55; }
+  .movable-content.dragging-source { opacity: 0.25; transform: scale(.98); }
+  .day-row.drag-over .movable-content { background: var(--accent-soft); border-color: var(--accent); transform: scale(1.015); }
 
   .day-row .day-workout { display: flex; align-items: center; gap: 12px; min-width: 0; }
   .day-row .day-workout .icon { font-size: 28px; line-height: 1; flex: 0 0 auto; }
@@ -190,14 +197,16 @@
   .day-row .drag-handle:hover { color: var(--accent); background: var(--surface-3); }
   .day-row .drag-handle:active { cursor: grabbing; color: var(--accent); }
 
-  /* Drag-and-drop states */
-  .day-row.dragging-source { opacity: 0.35; }
-  .day-row.drag-over { background: var(--accent-soft); border-color: var(--accent); transform: scale(1.015); }
-  .day-row.swap-source { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent); }
-
   .dragging-ghost { position: fixed; pointer-events: none; z-index: 2000;
     transform: rotate(1.5deg); box-shadow: 0 16px 40px rgba(0,0,0,0.6);
-    opacity: 0.95; left: 0; top: 0; }
+    opacity: 0.95; left: 0; top: 0; background: var(--surface-2); border: 1px solid var(--accent);
+    border-radius: 12px; padding: 12px; display: grid; grid-template-columns: 1fr 36px; gap: 8px; align-items: center; }
+
+  /* Wheel item — workout option style */
+  .wheel-item .workout-line { display: inline-flex; align-items: baseline; gap: 8px; }
+  .wheel-item .workout-line .emoji { font-size: 22px; }
+  .wheel-item .workout-line .label { font-size: 16px; }
+  .wheel-item.selected .workout-line .label { font-size: 19px; }
 
   /* Swap mode banner */
   .swap-banner { display: flex; align-items: center; justify-content: space-between; gap: 12px;
@@ -1239,7 +1248,8 @@ function formatPrescription(p) {
   return `${p.sets} × ${p.amount}${p.unit === 'sec' ? 's' : ''}`;
 }
 
-function makeWheelComponent(options, initialValue, suffix) {
+function makeWheelComponent(options, initialValue, suffix, opts) {
+  opts = opts || {};
   const wheel = el('div', 'wheel');
   wheel.appendChild(el('div', 'wheel-rail'));
   const scrollEl = el('div', 'wheel-scroll');
@@ -1247,15 +1257,22 @@ function makeWheelComponent(options, initialValue, suffix) {
 
   options.forEach((v, i) => {
     const item = el('div', 'wheel-item');
-    item.appendChild(document.createTextNode(Number.isInteger(v) ? String(v) : v.toString()));
-    if (suffix) item.appendChild(el('span', 'suffix', suffix));
+    if (opts.renderItem) {
+      opts.renderItem(item, v);
+    } else {
+      item.appendChild(document.createTextNode(Number.isInteger(v) ? String(v) : v.toString()));
+      if (suffix) item.appendChild(el('span', 'suffix', suffix));
+    }
     item.dataset.idx = i;
     item.addEventListener('click', () => scrollEl.scrollTo({ top: i * 44, behavior: 'smooth' }));
     scrollEl.appendChild(item);
   });
 
   let selectedIdx = 0;
-  if (initialValue !== null && initialValue !== undefined && initialValue !== '') {
+  if (opts.findIdx) {
+    const found = opts.findIdx(options, initialValue);
+    if (found >= 0) selectedIdx = found;
+  } else if (initialValue !== null && initialValue !== undefined && initialValue !== '') {
     const num = parseFloat(initialValue);
     if (!isNaN(num)) {
       let bestDist = Infinity;
@@ -1574,58 +1591,60 @@ function openWorkoutSheet(iso, handlers) {
   const head = el('div', 'sheet-head');
   const cancelBtn = el('button', 'sheet-cancel', 'Cancel');
   const dayLabel = new Date(iso + 'T12:00:00').toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' });
+  const doneBtn = el('button', 'sheet-done', 'Done');
   head.appendChild(cancelBtn);
   head.appendChild(el('div', 'sheet-title', dayLabel));
-  const spacer = el('div'); spacer.style.width = '60px';
-  head.appendChild(spacer);
+  head.appendChild(doneBtn);
   sheet.appendChild(head);
 
+  // Workout wheel — scroll-snap selection
+  const wheel = makeWheelComponent(WORKOUT_OPTIONS, currentKey, '', {
+    renderItem: (item, opt) => {
+      const line = el('span', 'workout-line');
+      line.appendChild(el('span', 'emoji', workoutEmoji(opt.workout)));
+      line.appendChild(el('span', 'label', workoutLabel(opt.workout)));
+      item.appendChild(line);
+    },
+    findIdx: (options, val) => options.findIndex(o => o.key === val)
+  });
+  sheet.appendChild(wheel.el);
+
+  // Action buttons below the wheel
   if (handlers.onOpen) {
     const openAction = el('div', 'sheet-action', '▶ Open this day');
-    openAction.style.marginTop = '0';
-    openAction.style.marginBottom = '8px';
-    openAction.addEventListener('click', () => { close(); handlers.onOpen(); });
+    openAction.addEventListener('click', () => { close(false); handlers.onOpen(); });
     sheet.appendChild(openAction);
   }
-
-  const list = el('div', 'sheet-list');
-  WORKOUT_OPTIONS.forEach(opt => {
-    const row = el('div', 'sheet-row' + (opt.key === currentKey ? ' selected' : ''));
-    row.appendChild(el('span', 'sheet-row-icon', workoutEmoji(opt.workout)));
-    row.appendChild(el('span', 'sheet-row-label', workoutLabel(opt.workout)));
-    if (opt.key === currentKey) row.appendChild(el('span', 'sheet-row-check', '✓'));
-    row.addEventListener('click', () => {
-      close();
-      handlers.onPick(opt.workout);
-    });
-    list.appendChild(row);
-  });
-  sheet.appendChild(list);
-
   if (handlers.onSwap) {
-    const swapRow = el('div', 'sheet-action', '⇄ Swap with another day…');
-    swapRow.addEventListener('click', () => { close(); handlers.onSwap(); });
-    sheet.appendChild(swapRow);
+    const swapAction = el('div', 'sheet-action', '⇄ Swap with another day…');
+    swapAction.addEventListener('click', () => { close(false); handlers.onSwap(); });
+    sheet.appendChild(swapAction);
   }
 
   document.body.appendChild(sheet);
 
-  const close = () => {
+  const close = (commit) => {
     sheet.classList.remove('open');
     backdrop.classList.remove('open');
     setTimeout(() => sheet.remove(), 280);
+    if (commit && handlers.onPick) {
+      const picked = wheel.getValue();
+      if (picked && picked.key !== currentKey) handlers.onPick(picked.workout);
+    }
   };
-  backdrop.onclick = close;
-  cancelBtn.onclick = close;
+  backdrop.onclick = () => close(false);
+  cancelBtn.onclick = () => close(false);
+  doneBtn.onclick = () => close(true);
 
   requestAnimationFrame(() => {
     backdrop.classList.add('open');
     sheet.classList.add('open');
+    wheel.syncScroll();
   });
 }
 
-// Drag-and-drop for day rows (works on touch + mouse via pointer events)
-function setupDayDrag(handle, row, iso) {
+// Drag-and-drop for day rows — dragged element is the .movable-content (workout card)
+function setupDayDrag(handle, draggedEl, iso) {
   let drag = null;
 
   const onPointerMove = (e) => {
@@ -1636,8 +1655,8 @@ function setupDayDrag(handle, row, iso) {
     if (!drag.activated) {
       if (Math.abs(dx) + Math.abs(dy) > 8) {
         drag.activated = true;
-        const rect = row.getBoundingClientRect();
-        const ghost = row.cloneNode(true);
+        const rect = draggedEl.getBoundingClientRect();
+        const ghost = draggedEl.cloneNode(true);
         ghost.classList.add('dragging-ghost');
         ghost.style.width = rect.width + 'px';
         ghost.style.height = rect.height + 'px';
@@ -1645,7 +1664,7 @@ function setupDayDrag(handle, row, iso) {
         drag.offsetY = e.clientY - rect.top;
         document.body.appendChild(ghost);
         drag.ghost = ghost;
-        row.classList.add('dragging-source');
+        draggedEl.classList.add('dragging-source');
       }
     }
 
@@ -1674,7 +1693,7 @@ function setupDayDrag(handle, row, iso) {
 
     document.querySelectorAll('.day-row.drag-over').forEach(r => r.classList.remove('drag-over'));
     if (drag.ghost) drag.ghost.remove();
-    row.classList.remove('dragging-source');
+    draggedEl.classList.remove('dragging-source');
     drag = null;
 
     if (wasActivated && targetISO) {
@@ -1753,13 +1772,15 @@ function renderWeek() {
     const row = el('div', classes);
     row.dataset.iso = iso;
 
-    // Date column
+    // Fixed date column — stays in place during drag
     const date = el('div', 'day-date');
     date.appendChild(el('div', 'dow', DOW[i]));
     date.appendChild(el('div', 'dnum', String(new Date(iso+'T12:00:00').getDate())));
     row.appendChild(date);
 
-    // Workout column
+    // Movable workout card — the part that drags
+    const card = el('div', 'movable-content');
+
     const wo = el('div', 'day-workout');
     wo.appendChild(el('div', 'icon', workoutEmoji(sched)));
     const info = el('div', 'info');
@@ -1773,19 +1794,20 @@ function renderWeek() {
       if (subTxt) info.appendChild(el('div', 'sub', subTxt));
     }
     wo.appendChild(info);
-    row.appendChild(wo);
+    card.appendChild(wo);
 
-    // Drag handle
     const handle = el('div', 'drag-handle', '⋮⋮');
     handle.title = 'Drag to swap with another day';
-    row.appendChild(handle);
+    card.appendChild(handle);
+
+    row.appendChild(card);
 
     if (inSwapMode) {
-      // In swap mode the whole row acts as the swap target picker
+      // In swap mode any row tap completes the swap
       row.addEventListener('click', () => performSwap(iso));
     } else {
-      // Tap row → open picker; drag handle → drag-to-swap
-      row.addEventListener('click', (e) => {
+      // Tap card → wheel picker; drag handle → swap drag
+      card.addEventListener('click', (e) => {
         if (e.target.closest('.drag-handle')) return;
         openWorkoutSheet(iso, {
           onPick: (workout) => { setScheduleOverride(iso, workout); renderWeek(); },
@@ -1793,7 +1815,7 @@ function renderWeek() {
           onOpen: () => jumpToToday(iso)
         });
       });
-      setupDayDrag(handle, row, iso);
+      setupDayDrag(handle, card, iso);
     }
 
     list.appendChild(row);
