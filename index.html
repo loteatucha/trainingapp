@@ -119,6 +119,26 @@
   .set-cell .label { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; line-height: 1; margin-bottom: 3px; font-weight: 600; }
   .set-cell .value { font-size: 19px; font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; line-height: 1.1; }
   .set-cell .value.empty { color: var(--muted); font-weight: 400; font-size: 14px; }
+  .set-cell .value.suggested { color: var(--accent); font-weight: 500; opacity: 0.7; font-style: italic; }
+
+  .repeat-btn { display: flex; align-items: center; gap: 6px; background: var(--accent-soft);
+    border: 1px dashed var(--accent); color: var(--accent); padding: 7px 12px; border-radius: 8px;
+    font-size: 12px; font-weight: 600; cursor: pointer; margin-top: 8px; transition: background .15s;
+    font-variant-numeric: tabular-nums; }
+  .repeat-btn:hover, .repeat-btn:active { background: rgba(96, 165, 250, 0.25); }
+
+  /* Per-exercise history sheet */
+  .ex-name.tappable { cursor: pointer; }
+  .ex-name.tappable:active { color: var(--accent); }
+  .history-list { display: flex; flex-direction: column; gap: 8px; max-height: 50vh; overflow-y: auto;
+    padding: 4px 0; }
+  .history-item { background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px;
+    padding: 10px 12px; }
+  .history-item .history-date { font-size: 12px; color: var(--muted); margin-bottom: 4px; font-weight: 600; }
+  .history-item .history-date .when { color: var(--accent); }
+  .history-item .history-sets { font-size: 14px; color: var(--ink); font-variant-numeric: tabular-nums; font-weight: 500; }
+  .history-item .history-rpe { font-size: 11px; color: var(--muted); margin-top: 3px; }
+  .history-empty { text-align: center; padding: 20px; color: var(--muted); font-size: 13px; }
 
   .add-set { background: none; border: 1px dashed var(--border-strong); color: var(--muted); padding: 9px;
     border-radius: 10px; cursor: pointer; font-size: 12px; font-weight: 600; transition: color .15s, border-color .15s; }
@@ -916,7 +936,15 @@ function renderRoutineExercises(container, routine, iso, log, opts) {
         onChange && onChange();
       });
       left.appendChild(cb);
-      left.appendChild(el('div', 'ex-name', ex.name));
+      const nameEl = el('div', 'ex-name' + (trackSets ? ' tappable' : ''), ex.name);
+      if (trackSets) {
+        nameEl.title = 'Tap to see history';
+        nameEl.addEventListener('click', (e) => {
+          e.stopPropagation();
+          openExerciseHistory(ex.id, ex.name, iso);
+        });
+      }
+      left.appendChild(nameEl);
       head.appendChild(left);
       head.appendChild(el('div', 'ex-prescription', ex.prescription || ''));
       exDiv.appendChild(head);
@@ -947,17 +975,42 @@ function renderRoutineExercises(container, routine, iso, log, opts) {
         const timeBased = isTimeBased(ex.prescription);
         const setsDiv = el('div', 'ex-sets');
         w.sets[ex.id].forEach((s, i) => {
-          setsDiv.appendChild(makeSetRow(s, i, timeBased));
+          const lastSet = lastEx && lastEx.sets[i] ? lastEx.sets[i] : null;
+          setsDiv.appendChild(makeSetRow(s, i, timeBased, lastSet));
         });
         const addBtn = el('button', 'add-set', '+ add set');
         addBtn.addEventListener('click', () => {
           const newSet = { reps:'', kg:'', rpe:'' };
           w.sets[ex.id].push(newSet);
           saveState();
-          setsDiv.insertBefore(makeSetRow(newSet, w.sets[ex.id].length - 1, timeBased), addBtn);
+          const lastSet = lastEx && lastEx.sets[w.sets[ex.id].length - 1] ? lastEx.sets[w.sets[ex.id].length - 1] : null;
+          setsDiv.insertBefore(makeSetRow(newSet, w.sets[ex.id].length - 1, timeBased, lastSet), addBtn);
         });
         setsDiv.appendChild(addBtn);
         exDiv.appendChild(setsDiv);
+
+        // "Same as last time" repeat button — only when there's a last session AND at least one set is empty
+        if (lastEx && w.sets[ex.id].some(s => !s.reps && !s.kg && !s.rpe)) {
+          const repeatBtn = el('button', 'repeat-btn');
+          repeatBtn.appendChild(el('span', null, '↶ Same as last time'));
+          const summary = el('span', null, '(' + formatLastSets(lastEx.sets, timeBased) + ')');
+          summary.style.opacity = '0.7';
+          repeatBtn.appendChild(summary);
+          repeatBtn.addEventListener('click', () => {
+            // Fill only empty sets, preserve any already-edited ones
+            w.sets[ex.id].forEach((s, i) => {
+              const ls = lastEx.sets[i];
+              if (!ls) return;
+              if (!s.reps) s.reps = ls.reps || '';
+              if (!s.kg)   s.kg   = ls.kg   || '';
+              if (!s.rpe)  s.rpe  = ls.rpe  || '';
+            });
+            saveState();
+            renderToday(iso);
+            if (navigator.vibrate) navigator.vibrate(8);
+          });
+          exDiv.appendChild(repeatBtn);
+        }
       }
       b.appendChild(exDiv);
     });
@@ -1072,11 +1125,101 @@ function openWheelPicker(opts, onPick) {
   doneBtn.onclick = () => close(true);
 }
 
-function makeSetCell(label, value) {
+// Per-exercise history sheet — shows all past sessions for a single exercise
+function openExerciseHistory(exId, exName, currentISO) {
+  const history = [];
+  Object.entries(state.logs).forEach(([iso, log]) => {
+    if (iso >= currentISO) return;
+    const sets = log.workout && log.workout.sets && log.workout.sets[exId];
+    if (!sets || !sets.length) return;
+    const populated = sets.filter(s => s.reps || s.kg || s.rpe);
+    if (!populated.length) return;
+    history.push({ iso, sets: populated });
+  });
+  history.sort((a, b) => b.iso.localeCompare(a.iso));
+
+  let backdrop = document.getElementById('sheet-backdrop');
+  if (!backdrop) {
+    backdrop = el('div', 'sheet-backdrop');
+    backdrop.id = 'sheet-backdrop';
+    document.body.appendChild(backdrop);
+  }
+  const existing = document.getElementById('picker-sheet');
+  if (existing) existing.remove();
+
+  const sheet = el('div', 'sheet');
+  sheet.id = 'picker-sheet';
+  sheet.appendChild(el('div', 'sheet-handle'));
+
+  const head = el('div', 'sheet-head');
+  const closeBtn = el('button', 'sheet-cancel', 'Close');
+  head.appendChild(closeBtn);
+  head.appendChild(el('div', 'sheet-title', exName));
+  const spacer = el('div'); spacer.style.width = '60px';
+  head.appendChild(spacer);
+  sheet.appendChild(head);
+
+  if (!history.length) {
+    sheet.appendChild(el('div', 'history-empty', 'No previous sessions logged for this exercise yet.'));
+  } else {
+    const subtitle = el('div', 'muted');
+    subtitle.style.cssText = 'text-align: center; padding: 4px 0 10px; font-size: 12px;';
+    subtitle.textContent = `${history.length} session${history.length === 1 ? '' : 's'} logged`;
+    sheet.appendChild(subtitle);
+
+    const list = el('div', 'history-list');
+    history.forEach(h => {
+      const item = el('div', 'history-item');
+      const dateStr = new Date(h.iso + 'T12:00:00').toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+      const whenStr = formatWhen(h.iso, currentISO);
+      const dateDiv = el('div', 'history-date');
+      dateDiv.appendChild(document.createTextNode(dateStr + ' · '));
+      dateDiv.appendChild(el('span', 'when', whenStr));
+      item.appendChild(dateDiv);
+
+      const setsStr = h.sets.map(s => {
+        const v = s.reps || '–';
+        const w = s.kg ? '·' + s.kg + 'kg' : '';
+        return v + w;
+      }).join(' | ');
+      item.appendChild(el('div', 'history-sets', setsStr));
+
+      const rpe = avgRpeOf(h.sets);
+      if (rpe !== null) {
+        item.appendChild(el('div', 'history-rpe', 'avg RPE ' + (rpe % 1 === 0 ? rpe : rpe.toFixed(1))));
+      }
+      list.appendChild(item);
+    });
+    sheet.appendChild(list);
+  }
+
+  document.body.appendChild(sheet);
+
+  const close = () => {
+    sheet.classList.remove('open');
+    backdrop.classList.remove('open');
+    setTimeout(() => sheet.remove(), 280);
+  };
+  backdrop.onclick = close;
+  closeBtn.onclick = close;
+
+  requestAnimationFrame(() => {
+    backdrop.classList.add('open');
+    sheet.classList.add('open');
+  });
+}
+
+function makeSetCell(label, value, suggested) {
   const cell = el('div', 'set-cell');
   cell.appendChild(el('div', 'label', label));
-  const v = el('div', 'value' + (!value ? ' empty' : ''));
-  v.textContent = value || '–';
+  let v;
+  if (value) {
+    v = el('div', 'value', String(value));
+  } else if (suggested) {
+    v = el('div', 'value suggested', String(suggested));
+  } else {
+    v = el('div', 'value empty', '–');
+  }
   cell.appendChild(v);
   return cell;
 }
@@ -1242,7 +1385,7 @@ function openPrescriptionPicker(current, onPick) {
   doneBtn.onclick = () => close(true);
 }
 
-function makeSetRow(s, i, timeBased) {
+function makeSetRow(s, i, timeBased, lastSet) {
   const row = el('div', 'set-row');
   row.appendChild(el('div', 'set-num', String(i+1)));
 
@@ -1256,10 +1399,12 @@ function makeSetRow(s, i, timeBased) {
   ];
 
   specs.forEach(spec => {
-    const cell = makeSetCell(spec.label, s[spec.key]);
+    const suggested = (!s[spec.key] && lastSet && lastSet[spec.key]) ? lastSet[spec.key] : null;
+    const cell = makeSetCell(spec.label, s[spec.key], suggested);
     cell.addEventListener('click', () => {
+      const initial = s[spec.key] || suggested || '';
       openWheelPicker({
-        value: s[spec.key],
+        value: initial,
         options: spec.options,
         label: spec.sheetLabel,
         suffix: spec.suffix
@@ -1268,7 +1413,7 @@ function makeSetRow(s, i, timeBased) {
         saveState();
         const valueDiv = cell.querySelector('.value');
         valueDiv.textContent = String(v);
-        valueDiv.classList.remove('empty');
+        valueDiv.classList.remove('empty', 'suggested');
       });
     });
     row.appendChild(cell);
