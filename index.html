@@ -152,7 +152,59 @@
   .day-card .day-status { position: absolute; top: 4px; right: 6px; font-size: 13px; line-height: 1; font-weight: 700; }
   .day-card .day-status.done { color: var(--done); }
   .day-card .day-status.skipped { color: var(--skip); }
-  .day-card .day-swap { width: 100%; font-size: 10px; padding: 4px 2px; border: 1px solid var(--border); border-radius: 8px; background: var(--card); color: var(--ink); margin-top: 6px; }
+  .day-card .day-edit { display: block; width: 100%; padding: 5px 4px; margin-top: 8px;
+    background: var(--surface-3); color: var(--accent); font-size: 10px; font-weight: 700;
+    letter-spacing: 0.1em; text-align: center; border-radius: 8px; cursor: pointer;
+    transition: background .15s; border: 1px solid var(--border); user-select: none; }
+  .day-card .day-edit:hover { background: var(--accent-soft); }
+  .day-card.swap-source { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent); }
+  .day-card.swap-source .day-card-tap { opacity: 0.6; }
+  .day-card.swap-target { cursor: pointer; }
+  .day-card.swap-target:hover { border-color: var(--accent); background: rgba(96, 165, 250, 0.12); }
+
+  /* Swap mode banner */
+  .swap-banner { display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    background: var(--accent-soft); border: 1px solid rgba(96, 165, 250, 0.4); border-radius: 12px;
+    padding: 12px 14px; margin-bottom: 12px; color: var(--ink); font-size: 14px; }
+  .swap-banner strong { color: var(--accent); }
+
+  /* Workout picker sheet rows */
+  .sheet-list { display: flex; flex-direction: column; }
+  .sheet-row { display: flex; align-items: center; gap: 14px; padding: 14px 10px;
+    border-radius: 10px; cursor: pointer; transition: background .15s; border-bottom: 1px solid var(--border); }
+  .sheet-row:last-of-type { border-bottom: none; }
+  .sheet-row:hover, .sheet-row:active { background: var(--surface-2); }
+  .sheet-row.selected { background: var(--accent-soft); }
+  .sheet-row-icon { font-size: 22px; line-height: 1; flex: 0 0 auto; width: 28px; text-align: center; }
+  .sheet-row-label { font-size: 15px; color: var(--ink); flex: 1; font-weight: 500; }
+  .sheet-row-check { color: var(--accent); font-size: 16px; font-weight: 700; }
+  .sheet-action { display: flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 14px 8px; margin-top: 12px; border-radius: 12px; cursor: pointer;
+    background: var(--surface-2); color: var(--accent); font-weight: 600; font-size: 14px;
+    transition: background .15s; border: 1px solid var(--border); }
+  .sheet-action:hover, .sheet-action:active { background: var(--surface-3); }
+
+  /* Segmented control (for prescription picker) */
+  .segmented { display: grid; grid-auto-columns: 1fr; grid-auto-flow: column; gap: 0;
+    background: var(--surface-2); border-radius: 10px; padding: 3px; margin: 0 0 14px; }
+  .segmented-opt { padding: 8px 12px; text-align: center; font-size: 13px; font-weight: 600;
+    color: var(--muted); cursor: pointer; border-radius: 7px; transition: background .15s, color .15s; user-select: none; }
+  .segmented-opt.active { background: var(--surface-3); color: var(--ink); box-shadow: inset 0 1px 0 rgba(255,255,255,0.05); }
+
+  /* Multi-wheel layout */
+  .wheels-row { display: grid; gap: 12px; }
+  .wheels-row.cols-2 { grid-template-columns: 1fr 1fr; }
+  .wheel-col { display: flex; flex-direction: column; }
+  .wheel-col-label { text-align: center; font-size: 11px; color: var(--muted); text-transform: uppercase;
+    letter-spacing: 0.1em; font-weight: 600; margin-bottom: 6px; }
+
+  /* Prescription button (in Plan editor) */
+  .prescription-btn { display: flex; align-items: center; justify-content: center;
+    width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px;
+    background: var(--surface-2); color: var(--ink); font: inherit; font-size: 14px; font-weight: 600;
+    cursor: pointer; transition: background .15s, border-color .15s; font-variant-numeric: tabular-nums; }
+  .prescription-btn:hover, .prescription-btn:active { background: var(--surface-3); border-color: var(--border-strong); }
+  .prescription-btn .empty { color: var(--muted); font-weight: 400; }
 
   /* Plan view */
   .schedule-row { display: grid; grid-template-columns: 90px 1fr; padding: 6px 0; border-bottom: 1px dashed var(--border); align-items: baseline; }
@@ -1014,6 +1066,167 @@ function makeSetCell(label, value) {
   return cell;
 }
 
+// Prescription helpers + multi-wheel picker (Plan tab)
+function parsePrescription(s) {
+  s = String(s || '').trim();
+  const m = s.match(/(\d+)\s*[×x]\s*(\d+(?:\.\d+)?)\s*(s|sec|"|')?/i);
+  if (!m) return { sets: 3, amount: 8, unit: 'reps' };
+  const sets = parseInt(m[1]);
+  const amount = parseFloat(m[2]);
+  const sfx = (m[3] || '').toLowerCase();
+  const unit = (sfx === 's' || sfx === 'sec' || sfx === '"' || sfx === "'") ? 'sec' : 'reps';
+  return { sets, amount, unit };
+}
+function formatPrescription(p) {
+  return `${p.sets} × ${p.amount}${p.unit === 'sec' ? 's' : ''}`;
+}
+
+function makeWheelComponent(options, initialValue, suffix) {
+  const wheel = el('div', 'wheel');
+  wheel.appendChild(el('div', 'wheel-rail'));
+  const scrollEl = el('div', 'wheel-scroll');
+  wheel.appendChild(scrollEl);
+
+  options.forEach((v, i) => {
+    const item = el('div', 'wheel-item');
+    item.appendChild(document.createTextNode(Number.isInteger(v) ? String(v) : v.toString()));
+    if (suffix) item.appendChild(el('span', 'suffix', suffix));
+    item.dataset.idx = i;
+    item.addEventListener('click', () => scrollEl.scrollTo({ top: i * 44, behavior: 'smooth' }));
+    scrollEl.appendChild(item);
+  });
+
+  let selectedIdx = 0;
+  if (initialValue !== null && initialValue !== undefined && initialValue !== '') {
+    const num = parseFloat(initialValue);
+    if (!isNaN(num)) {
+      let bestDist = Infinity;
+      options.forEach((v, i) => {
+        const d = Math.abs(v - num);
+        if (d < bestDist) { bestDist = d; selectedIdx = i; }
+      });
+    }
+  }
+  const items = scrollEl.querySelectorAll('.wheel-item');
+  if (items[selectedIdx]) items[selectedIdx].classList.add('selected');
+
+  scrollEl.addEventListener('scroll', () => {
+    const idx = Math.round(scrollEl.scrollTop / 44);
+    if (idx >= 0 && idx < options.length && idx !== selectedIdx) {
+      if (items[selectedIdx]) items[selectedIdx].classList.remove('selected');
+      if (items[idx]) items[idx].classList.add('selected');
+      selectedIdx = idx;
+      if (navigator.vibrate) navigator.vibrate(3);
+    }
+  }, { passive: true });
+
+  return {
+    el: wheel,
+    getValue: () => options[selectedIdx],
+    syncScroll: () => { scrollEl.scrollTop = selectedIdx * 44; }
+  };
+}
+
+function openPrescriptionPicker(current, onPick) {
+  let { sets, amount, unit } = current;
+
+  let backdrop = document.getElementById('sheet-backdrop');
+  if (!backdrop) {
+    backdrop = el('div', 'sheet-backdrop');
+    backdrop.id = 'sheet-backdrop';
+    document.body.appendChild(backdrop);
+  }
+  const existing = document.getElementById('picker-sheet');
+  if (existing) existing.remove();
+
+  const sheet = el('div', 'sheet');
+  sheet.id = 'picker-sheet';
+  sheet.appendChild(el('div', 'sheet-handle'));
+
+  const head = el('div', 'sheet-head');
+  const cancelBtn = el('button', 'sheet-cancel', 'Cancel');
+  const doneBtn = el('button', 'sheet-done', 'Done');
+  head.appendChild(cancelBtn);
+  head.appendChild(el('div', 'sheet-title', 'Prescription'));
+  head.appendChild(doneBtn);
+  sheet.appendChild(head);
+
+  const seg = el('div', 'segmented');
+  const repsOpt = el('div', 'segmented-opt' + (unit === 'reps' ? ' active' : ''), 'Reps');
+  const timeOpt = el('div', 'segmented-opt' + (unit === 'sec' ? ' active' : ''), 'Time');
+  seg.appendChild(repsOpt);
+  seg.appendChild(timeOpt);
+  sheet.appendChild(seg);
+
+  const wheelsRow = el('div', 'wheels-row cols-2');
+  const setsCol = el('div', 'wheel-col');
+  setsCol.appendChild(el('div', 'wheel-col-label', 'Sets'));
+  const setsWheel = makeWheelComponent(rangeOptions(1, 10, 1), sets, '');
+  setsCol.appendChild(setsWheel.el);
+  wheelsRow.appendChild(setsCol);
+
+  const amountCol = el('div', 'wheel-col');
+  const amountLabel = el('div', 'wheel-col-label', unit === 'sec' ? 'Seconds' : 'Reps');
+  amountCol.appendChild(amountLabel);
+  let amountWheel;
+  const buildAmountWheel = (u, cur) => {
+    if (amountWheel) amountWheel.el.remove();
+    const opts = u === 'sec' ? rangeOptions(5, 180, 5) : rangeOptions(1, 100, 1);
+    amountWheel = makeWheelComponent(opts, cur, u === 'sec' ? 's' : '');
+    amountCol.appendChild(amountWheel.el);
+    requestAnimationFrame(() => amountWheel.syncScroll());
+  };
+  buildAmountWheel(unit, amount);
+  wheelsRow.appendChild(amountCol);
+  sheet.appendChild(wheelsRow);
+
+  repsOpt.addEventListener('click', () => {
+    if (unit === 'reps') return;
+    unit = 'reps';
+    repsOpt.classList.add('active');
+    timeOpt.classList.remove('active');
+    amountLabel.textContent = 'Reps';
+    const cur = amountWheel.getValue();
+    const newAmount = (cur >= 1 && cur <= 100) ? cur : 8;
+    buildAmountWheel('reps', newAmount);
+  });
+  timeOpt.addEventListener('click', () => {
+    if (unit === 'sec') return;
+    unit = 'sec';
+    timeOpt.classList.add('active');
+    repsOpt.classList.remove('active');
+    amountLabel.textContent = 'Seconds';
+    const cur = amountWheel.getValue();
+    const closest5 = Math.max(5, Math.min(180, Math.round(cur / 5) * 5));
+    buildAmountWheel('sec', closest5);
+  });
+
+  document.body.appendChild(sheet);
+
+  requestAnimationFrame(() => {
+    backdrop.classList.add('open');
+    sheet.classList.add('open');
+    setsWheel.syncScroll();
+    amountWheel.syncScroll();
+  });
+
+  const close = (commit) => {
+    sheet.classList.remove('open');
+    backdrop.classList.remove('open');
+    setTimeout(() => sheet.remove(), 280);
+    if (commit && onPick) {
+      onPick({
+        sets: setsWheel.getValue(),
+        amount: amountWheel.getValue(),
+        unit
+      });
+    }
+  };
+  backdrop.onclick = () => close(false);
+  cancelBtn.onclick = () => close(false);
+  doneBtn.onclick = () => close(true);
+}
+
 function makeSetRow(s, i, timeBased) {
   const row = el('div', 'set-row');
   row.appendChild(el('div', 'set-num', String(i+1)));
@@ -1157,6 +1370,93 @@ function notesArea(w, label) {
 //  WEEK VIEW
 // ============================================================
 
+let swapSourceISO = null;
+
+function enterSwapMode(iso) {
+  swapSourceISO = iso;
+  renderWeek();
+}
+
+function performSwap(targetISO) {
+  if (!swapSourceISO) return;
+  if (swapSourceISO === targetISO) { swapSourceISO = null; renderWeek(); return; }
+  const sourceSched = getEffectiveSchedule(swapSourceISO);
+  const targetSched = getEffectiveSchedule(targetISO);
+  setScheduleOverride(swapSourceISO, targetSched);
+  setScheduleOverride(targetISO, sourceSched);
+  swapSourceISO = null;
+  renderWeek();
+  toast('Days swapped ✓');
+}
+
+function cancelSwap() {
+  swapSourceISO = null;
+  renderWeek();
+}
+
+function openWorkoutSheet(iso, handlers) {
+  const sched = getEffectiveSchedule(iso);
+  const currentKey = keyOf(sched);
+
+  let backdrop = document.getElementById('sheet-backdrop');
+  if (!backdrop) {
+    backdrop = el('div', 'sheet-backdrop');
+    backdrop.id = 'sheet-backdrop';
+    document.body.appendChild(backdrop);
+  }
+  const existing = document.getElementById('picker-sheet');
+  if (existing) existing.remove();
+
+  const sheet = el('div', 'sheet');
+  sheet.id = 'picker-sheet';
+  sheet.appendChild(el('div', 'sheet-handle'));
+
+  const head = el('div', 'sheet-head');
+  const cancelBtn = el('button', 'sheet-cancel', 'Cancel');
+  const dayLabel = new Date(iso + 'T12:00:00').toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' });
+  head.appendChild(cancelBtn);
+  head.appendChild(el('div', 'sheet-title', dayLabel));
+  const spacer = el('div'); spacer.style.width = '60px';
+  head.appendChild(spacer);
+  sheet.appendChild(head);
+
+  const list = el('div', 'sheet-list');
+  WORKOUT_OPTIONS.forEach(opt => {
+    const row = el('div', 'sheet-row' + (opt.key === currentKey ? ' selected' : ''));
+    row.appendChild(el('span', 'sheet-row-icon', workoutEmoji(opt.workout)));
+    row.appendChild(el('span', 'sheet-row-label', workoutLabel(opt.workout)));
+    if (opt.key === currentKey) row.appendChild(el('span', 'sheet-row-check', '✓'));
+    row.addEventListener('click', () => {
+      close();
+      handlers.onPick(opt.workout);
+    });
+    list.appendChild(row);
+  });
+  sheet.appendChild(list);
+
+  const swapRow = el('div', 'sheet-action', '⇄ Swap with another day…');
+  swapRow.addEventListener('click', () => {
+    close();
+    handlers.onSwap();
+  });
+  sheet.appendChild(swapRow);
+
+  document.body.appendChild(sheet);
+
+  const close = () => {
+    sheet.classList.remove('open');
+    backdrop.classList.remove('open');
+    setTimeout(() => sheet.remove(), 280);
+  };
+  backdrop.onclick = close;
+  cancelBtn.onclick = close;
+
+  requestAnimationFrame(() => {
+    backdrop.classList.add('open');
+    sheet.classList.add('open');
+  });
+}
+
 function renderWeek() {
   const root = document.getElementById('tab-week');
   root.innerHTML = '';
@@ -1164,7 +1464,19 @@ function renderWeek() {
   const monday = startOfWeekISO(state.viewISO || today);
   const days = Array.from({length:7}, (_,i) => addDaysISO(monday, i));
 
-  // Strip
+  // Swap mode banner
+  if (swapSourceISO) {
+    const sourceLabel = new Date(swapSourceISO + 'T12:00:00').toLocaleDateString(undefined, { weekday: 'long' });
+    const banner = el('div', 'swap-banner');
+    const text = el('span');
+    text.innerHTML = `Pick a day to swap with <strong>${sourceLabel}</strong>`;
+    const cancelBtn = el('button', 'btn small ghost', 'Cancel');
+    cancelBtn.addEventListener('click', cancelSwap);
+    banner.appendChild(text);
+    banner.appendChild(cancelBtn);
+    root.appendChild(banner);
+  }
+
   const card = el('div', 'card');
   const head = el('div', 'plan-section-head');
   head.appendChild(el('h2', null, 'This week'));
@@ -1179,72 +1491,57 @@ function renderWeek() {
   head.appendChild(resetBtn);
   card.appendChild(head);
 
-  card.appendChild(el('div', 'muted', niceRange(days[0], days[6]) + ' · tap a day to log it · use the dropdown to swap workout'));
+  const hint = swapSourceISO
+    ? niceRange(days[0], days[6]) + ' · tap a day to complete the swap'
+    : niceRange(days[0], days[6]) + ' · tap day to log · tap EDIT to change or swap';
+  card.appendChild(el('div', 'muted', hint));
+
   const strip = el('div', 'week-strip'); strip.style.marginTop = '10px';
   const DOW = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
   days.forEach((iso, i) => {
     const sched = getEffectiveSchedule(iso);
     const log = state.logs[iso] || {};
     const status = log.workout?.status || 'pending';
-    const dc = el('div', 'day-card' + (iso === today ? ' today' : ''));
+    const isSource = swapSourceISO === iso;
+    const inSwapMode = !!swapSourceISO;
 
-    // Status badge (corner)
+    let classes = 'day-card';
+    if (iso === today) classes += ' today';
+    if (isSource) classes += ' swap-source';
+    if (inSwapMode && !isSource) classes += ' swap-target';
+    const dc = el('div', classes);
+
     if (status === 'done' || status === 'skipped') {
       dc.appendChild(el('div', 'day-status ' + status, status === 'done' ? '✓' : '×'));
     }
 
-    // Tappable header — jumps to that day's Today view
     const tap = el('div', 'day-card-tap');
     tap.appendChild(el('div', 'dow', DOW[i]));
     tap.appendChild(el('div', 'dnum', String(new Date(iso+'T12:00:00').getDate())));
     tap.appendChild(el('div', 'icon', workoutEmoji(sched)));
     tap.appendChild(el('div', 'sub', workoutSubLabel(sched)));
-    tap.addEventListener('click', () => jumpToToday(iso));
     dc.appendChild(tap);
 
-    // Swap dropdown
-    const sel = document.createElement('select');
-    sel.className = 'day-swap';
-    WORKOUT_OPTIONS.forEach(opt => {
-      const o = document.createElement('option');
-      o.value = opt.key;
-      o.textContent = workoutEmoji(opt.workout) + ' ' + workoutShort(opt.workout);
-      sel.appendChild(o);
-    });
-    sel.value = keyOf(sched);
-    sel.addEventListener('change', () => {
-      const opt = WORKOUT_OPTIONS.find(o => o.key === sel.value);
-      if (opt) setScheduleOverride(iso, opt.workout);
-      renderWeek();
-    });
-    dc.appendChild(sel);
+    if (inSwapMode) {
+      // In swap mode the whole card acts as the swap target picker
+      dc.addEventListener('click', () => performSwap(iso));
+    } else {
+      tap.addEventListener('click', () => jumpToToday(iso));
+      const editPill = el('div', 'day-edit', 'EDIT');
+      editPill.addEventListener('click', (e) => {
+        e.stopPropagation();
+        openWorkoutSheet(iso, {
+          onPick: (workout) => { setScheduleOverride(iso, workout); renderWeek(); },
+          onSwap: () => enterSwapMode(iso)
+        });
+      });
+      dc.appendChild(editPill);
+    }
 
     strip.appendChild(dc);
   });
   card.appendChild(strip);
   root.appendChild(card);
-
-  // Weekly stats
-  const stats = computeWeekStats(days);
-  const statsCard = el('div', 'card');
-  statsCard.appendChild(el('h2', null, 'Volume & progress'));
-  const sg = el('div', 'cardio-block');
-  const cells = [
-    ['Sessions done', `${stats.done}/${stats.scheduled}`],
-    ['Strength done', `${stats.gymDone}`],
-    ['Run km', stats.runKm ? stats.runKm.toFixed(1) : '—'],
-    ['Run minutes', stats.runMin || '—'],
-    ['Avg RPE', stats.avgRpe ? stats.avgRpe.toFixed(1) : '—'],
-    ['Total sets logged', String(stats.totalSets)]
-  ];
-  cells.forEach(([l,v]) => {
-    const c = el('div', 'cardio-cell');
-    c.appendChild(el('div', 'label', l));
-    c.appendChild(el('div', 'value', String(v)));
-    sg.appendChild(c);
-  });
-  statsCard.appendChild(sg);
-  root.appendChild(statsCard);
 }
 
 function jumpToToday(iso) {
@@ -1265,37 +1562,6 @@ function niceRange(a, b) {
   }
   return `${fmt(A,{month:'short',day:'numeric'})} – ${fmt(B,{month:'short',day:'numeric'})}`;
 }
-function computeWeekStats(days) {
-  let done=0, scheduled=0, gymDone=0, runKm=0, runMin=0, rpeSum=0, rpeN=0, totalSets=0;
-  days.forEach((iso, i) => {
-    const sched = getEffectiveSchedule(iso);
-    if (sched && sched.type !== 'rest') scheduled++;
-    const log = state.logs[iso];
-    if (!log) return;
-    if (log.workout?.status === 'done') {
-      done++;
-      if (log.workout.type === 'gym') gymDone++;
-      if (log.workout.type === 'run') {
-        const km = parseFloat(log.workout.fields?.distance);
-        const min = parseFloat(log.workout.fields?.duration);
-        if (!isNaN(km)) runKm += km;
-        if (!isNaN(min)) runMin += min;
-      }
-      const rpe = parseFloat(log.workout.fields?.rpe);
-      if (!isNaN(rpe)) { rpeSum += rpe; rpeN++; }
-    }
-    if (log.workout?.sets) {
-      Object.values(log.workout.sets).forEach(arr => {
-        arr.forEach(s => {
-          if (s.reps) totalSets++;
-          const v = parseFloat(s.rpe); if (!isNaN(v)) { rpeSum+=v; rpeN++; }
-        });
-      });
-    }
-  });
-  return { done, scheduled, gymDone, runKm, runMin: Math.round(runMin), avgRpe: rpeN ? rpeSum/rpeN : 0, totalSets };
-}
-
 // ============================================================
 //  PLAN VIEW (editable)
 // ============================================================
@@ -1336,9 +1602,23 @@ function renderEditableRoutine(container, routine, onMutate) {
       const nm = document.createElement('input');
       nm.value = ex.name; nm.placeholder = 'Exercise name';
       nm.addEventListener('input', () => { ex.name = nm.value; saveState(); });
-      const pr = document.createElement('input');
-      pr.value = ex.prescription || ''; pr.placeholder = '3 × 8 or 2 × 20s';
-      pr.addEventListener('input', () => { ex.prescription = pr.value; saveState(); });
+      const pr = el('button', 'prescription-btn');
+      const renderPr = () => {
+        pr.textContent = '';
+        if (ex.prescription) {
+          pr.textContent = ex.prescription;
+        } else {
+          pr.appendChild(el('span', 'empty', 'Tap to set'));
+        }
+      };
+      renderPr();
+      pr.addEventListener('click', () => {
+        openPrescriptionPicker(parsePrescription(ex.prescription), (vals) => {
+          ex.prescription = formatPrescription(vals);
+          saveState();
+          renderPr();
+        });
+      });
       const del = el('button', 'icon-btn', '✕');
       del.title = 'Delete exercise';
       del.addEventListener('click', () => {
