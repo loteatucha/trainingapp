@@ -311,6 +311,39 @@
   .routine-name-input:hover { background: var(--surface-3); }
   .routine-name-input:focus { outline: none; background: var(--accent-soft); }
 
+  /* Weekly summary (history tab) */
+  .week-summary { display: grid; grid-template-columns: 130px 1fr; gap: 18px; align-items: center; }
+  .activity-ring { position: relative; width: 130px; height: 130px; }
+  .activity-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+  .activity-ring .ring-track { fill: none; stroke: var(--surface-2); stroke-width: 12; }
+  .activity-ring .ring-fill  { fill: none; stroke: var(--done); stroke-width: 12; stroke-linecap: round;
+    transition: stroke-dashoffset .5s ease; }
+  .activity-ring .ring-center { position: absolute; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 2px; }
+  .activity-ring .ring-count { font-size: 40px; font-weight: 700; color: var(--ink);
+    font-variant-numeric: tabular-nums; line-height: 1; letter-spacing: -0.02em; }
+  .activity-ring .ring-sub { font-size: 10px; color: var(--muted); text-transform: uppercase;
+    letter-spacing: 0.08em; font-weight: 600; }
+  .week-bars { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+  .week-bars .goal { font-size: 13px; font-weight: 600; color: var(--ink); cursor: pointer;
+    align-self: flex-start; padding: 3px 8px; border-radius: 6px; margin-left: -8px;
+    transition: background .15s; user-select: none; }
+  .week-bars .goal:hover { background: var(--surface-2); }
+  .week-bars .goal .goal-num { color: var(--done); }
+  .bars-row { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; align-items: end; height: 90px; }
+  .bar-col { display: flex; flex-direction: column; align-items: center; height: 100%; gap: 6px; min-width: 0; }
+  .bar-track { flex: 1; width: 100%; display: flex; align-items: flex-end; justify-content: center; }
+  .bar-fill { width: 70%; max-width: 22px; background: var(--done); border-radius: 5px 5px 0 0;
+    transition: height .4s ease; min-height: 6px; }
+  .bar-empty { width: 70%; max-width: 22px; height: 3px; background: var(--surface-3); border-radius: 2px; opacity: .6; }
+  .bar-label { font-size: 11px; color: var(--muted); font-weight: 600; letter-spacing: 0.04em; }
+  .bar-col.today .bar-label { color: var(--done); }
+  @media (max-width: 380px) {
+    .week-summary { grid-template-columns: 108px 1fr; gap: 12px; }
+    .activity-ring { width: 108px; height: 108px; }
+    .activity-ring .ring-count { font-size: 32px; }
+  }
+
   /* History entries */
   .entry-row { display: grid; grid-template-columns: 70px 1fr auto; gap: 10px; padding: 12px 0;
     border-top: 1px solid var(--border); cursor: pointer; align-items: center; transition: background .15s; }
@@ -593,6 +626,7 @@ function loadState() {
   s.customRunLong      = s.customRunLong      || null;
   s.customSwim         = s.customSwim         || null;
   s.customYoga         = s.customYoga         || null;
+  if (typeof s.weeklyGoal !== 'number' || s.weeklyGoal < 1) s.weeklyGoal = 5;
   // One-shot migration: legacy decimal duration/pace ("5.47") → MM:SS ("5:47")
   Object.values(s.logs || {}).forEach(log => {
     const f = log && log.workout && log.workout.fields;
@@ -2333,7 +2367,7 @@ function renderHistory() {
   head.appendChild(hr);
   head.appendChild(el('div', 'muted', `${entries.length} completed ${entries.length === 1 ? 'entry' : 'entries'}`));
 
-  // simple summary stats — prefer snapshot.workoutType when available
+  // Lifetime stats — prefer snapshot.workoutType when available
   if (entries.length) {
     const totals = entries.reduce((acc, e) => {
       const w = e.log.workout;
@@ -2345,7 +2379,7 @@ function renderHistory() {
       }
       return acc;
     }, { byType: {}, runKm: 0, runMin: 0 });
-    const sg = el('div', 'cardio-block'); sg.style.marginTop = '10px';
+    const sg = el('div', 'cardio-block'); sg.style.marginTop = '14px';
     const cells = [
       ['Total', String(entries.length)],
       ['Gym', String(totals.byType.gym || 0)],
@@ -2363,6 +2397,11 @@ function renderHistory() {
     head.appendChild(sg);
   }
   root.appendChild(head);
+
+  // Weekly summary card: ring (count vs goal) + this-week bar chart (Mon→Sun)
+  const weekCard = el('div', 'card');
+  weekCard.appendChild(renderWeeklySummary(entries));
+  root.appendChild(weekCard);
 
   // Entries list
   if (!entries.length) {
@@ -2425,6 +2464,87 @@ function renderHistory() {
     });
     root.appendChild(card);
   });
+}
+
+function renderWeeklySummary(entries) {
+  const wrap = el('div', 'week-summary');
+
+  const today = todayISO();
+  const weekStart = startOfWeekISO(today);
+  const days = [];
+  for (let i = 0; i < 7; i++) days.push(addDaysISO(weekStart, i));
+
+  // count = activities per day this week (exclude rest)
+  const countByISO = {};
+  entries.forEach(e => {
+    const w = e.log.workout;
+    const type = (w.snapshot && w.snapshot.workoutType) || w.type;
+    if (type === 'rest') return;
+    if (days.includes(e.iso)) countByISO[e.iso] = (countByISO[e.iso] || 0) + 1;
+  });
+  const weekCount = days.reduce((s, iso) => s + (countByISO[iso] || 0), 0);
+  const goal = state.weeklyGoal || 5;
+
+  // --- Ring (SVG) ---
+  const ring = el('div', 'activity-ring');
+  const size = 130, stroke = 12, r = (size - stroke) / 2;
+  const c = 2 * Math.PI * r;
+  const pct = Math.max(0, Math.min(1, weekCount / goal));
+  const offset = c * (1 - pct);
+  ring.innerHTML =
+    `<svg viewBox="0 0 ${size} ${size}">
+       <circle class="ring-track" cx="${size/2}" cy="${size/2}" r="${r}"/>
+       <circle class="ring-fill"  cx="${size/2}" cy="${size/2}" r="${r}"
+         stroke-dasharray="${c.toFixed(2)}" stroke-dashoffset="${offset.toFixed(2)}"/>
+     </svg>`;
+  const center = el('div', 'ring-center');
+  center.appendChild(el('div', 'ring-count', String(weekCount)));
+  center.appendChild(el('div', 'ring-sub', weekCount === 1 ? 'activity' : 'activities'));
+  ring.appendChild(center);
+  wrap.appendChild(ring);
+
+  // --- Bars + goal label ---
+  const right = el('div', 'week-bars');
+  const goalLabel = el('div', 'goal');
+  goalLabel.innerHTML = `Weekly goal: <span class="goal-num">${goal}</span>`;
+  goalLabel.title = 'Tap to change';
+  goalLabel.addEventListener('click', () => {
+    const opts = [];
+    for (let i = 1; i <= 14; i++) opts.push(i);
+    openWheelPicker({ value: goal, options: opts, label: 'Weekly goal', suffix: '' }, (v) => {
+      state.weeklyGoal = v;
+      saveState();
+      renderHistory();
+    });
+  });
+  right.appendChild(goalLabel);
+
+  const bars = el('div', 'bars-row');
+  const dayLetters = ['M','T','W','T','F','S','S'];
+  const maxCount = Math.max(1, ...days.map(iso => countByISO[iso] || 0));
+  days.forEach((iso, i) => {
+    const col = el('div', 'bar-col');
+    if (iso === today) col.classList.add('today');
+    const track = el('div', 'bar-track');
+    const count = countByISO[iso] || 0;
+    if (count > 0) {
+      const fill = el('div', 'bar-fill');
+      fill.style.height = Math.round((count / maxCount) * 100) + '%';
+      fill.title = `${iso}: ${count} ${count === 1 ? 'activity' : 'activities'}`;
+      track.appendChild(fill);
+    } else {
+      const empty = el('div', 'bar-empty');
+      empty.title = `${iso}: no activity`;
+      track.appendChild(empty);
+    }
+    col.appendChild(track);
+    col.appendChild(el('div', 'bar-label', dayLetters[i]));
+    bars.appendChild(col);
+  });
+  right.appendChild(bars);
+  wrap.appendChild(right);
+
+  return wrap;
 }
 
 function typeShort(t) {
