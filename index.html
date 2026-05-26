@@ -261,11 +261,12 @@
   .picker-field.empty { color: var(--muted); font-weight: 400; font-size: 18px; }
 
   /* Prescription button (in Plan editor) */
-  .prescription-btn { display: flex; align-items: center; justify-content: center;
-    width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px;
-    background: var(--surface-2); color: var(--ink); font: inherit; font-size: 14px; font-weight: 600;
-    cursor: pointer; transition: background .15s, border-color .15s; font-variant-numeric: tabular-nums; }
-  .prescription-btn:hover, .prescription-btn:active { background: var(--surface-3); border-color: var(--border-strong); }
+  .prescription-btn { display: flex; align-items: center; justify-content: center; gap: 4px;
+    width: 100%; min-height: 40px; padding: 10px 12px; border: 1px solid var(--border-strong); border-radius: 8px;
+    background: var(--surface-3); color: var(--accent); font: inherit; font-size: 15px; font-weight: 700;
+    cursor: pointer; transition: background .15s, border-color .15s; font-variant-numeric: tabular-nums;
+    white-space: nowrap; }
+  .prescription-btn:hover, .prescription-btn:active { background: var(--accent-soft); border-color: var(--accent); }
   .prescription-btn .empty { color: var(--muted); font-weight: 400; }
 
   /* Plan view */
@@ -275,11 +276,11 @@
 
   details { margin-top: 8px; }
   details > summary { cursor: pointer; padding: 8px 0; font-weight: 600; font-size: 14px; }
-  details > summary.plan-day-summary { display: flex; align-items: center; gap: 6px; list-style: none; }
+  details > summary.plan-day-summary { display: flex; align-items: center; gap: 10px; list-style: none; padding: 8px 4px; min-height: 48px; }
   details > summary.plan-day-summary::-webkit-details-marker { display: none; }
-  details > summary.plan-day-summary::before { content: '▸'; color: var(--muted); font-size: 12px; flex: 0 0 auto; transition: transform .15s ease; }
+  details > summary.plan-day-summary::before { content: '▸'; color: var(--accent); font-size: 22px; line-height: 1; flex: 0 0 20px; text-align: center; transition: transform .15s ease; font-weight: 700; }
   details[open] > summary.plan-day-summary::before { transform: rotate(90deg); }
-  details > summary.plan-day-summary .routine-name-input { flex: 1; }
+  details > summary.plan-day-summary .routine-name-input { flex: 1; font-size: 16px; }
 
   /* Plan editor */
   .plan-section-head { display: flex; justify-content: space-between; align-items: center; }
@@ -365,11 +366,22 @@
   @media (max-width: 480px) {
     body { padding: max(12px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) max(80px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left)); }
     .topbar h1 { font-size: 21px; }
-    .plan-edit-row { grid-template-columns: 1fr; }
-    .plan-edit-row.three { grid-template-columns: 1fr 28px; }
+    .plan-edit-row { grid-template-columns: 1fr; gap: 8px; padding: 10px 0; }
+    /* Mobile: name + delete on row 1, prescription full-width row 2, notes row 3 */
+    .plan-edit-row.three {
+      grid-template-columns: 1fr 36px;
+      grid-template-areas: "name del" "presc presc";
+      gap: 8px 6px;
+    }
+    .plan-edit-row.three > :nth-child(1) { grid-area: name; }
+    .plan-edit-row.three > :nth-child(2) { grid-area: presc; }
+    .plan-edit-row.three > :nth-child(3) { grid-area: del; }
+    .plan-edit-row.three > .note-row { grid-area: auto; grid-column: 1 / -1; }
+    .plan-edit-row.three .prescription-btn { min-height: 44px; font-size: 16px; padding: 10px 14px; }
+    .plan-edit-row.three .icon-btn { min-height: 44px; min-width: 36px; display: flex; align-items: center; justify-content: center; }
     .set-cell .value { font-size: 17px; }
     .set-cell { min-height: 46px; }
-    .day-row { padding: 10px; gap: 10px; grid-template-columns: 48px 1fr 32px; }
+    .day-row { padding: 10px; gap: 10px; grid-template-columns: 48px 1fr; }
     .day-row .day-workout .icon { font-size: 24px; }
   }
 </style>
@@ -418,85 +430,86 @@ const DEFAULT_SCHEDULE = {
   7: { type: 'yoga' }
 };
 
+// Bump GYM_VERSION whenever DEFAULT_GYM structure changes — forces a fresh seed
+// for existing users so they pick up the new template instead of stale customizations.
+const GYM_VERSION = 2;
+
+// Shared blocks (identical between Day 1 / Day 2 / Day 3)
+const GYM_MOBILITY = (prefix) => [
+  { id: `${prefix}-mob-1`, name: 'Cat-cow',                prescription: '1 × 10' },
+  { id: `${prefix}-mob-2`, name: "Active child's pose",    prescription: '1 × 10' },
+  { id: `${prefix}-mob-3`, name: 'Donkey kicks',           prescription: '1 × 10', note: 'Each side' },
+  { id: `${prefix}-mob-4`, name: 'Lateral leg sweeps',     prescription: '1 × 10', note: 'Each side' },
+  { id: `${prefix}-mob-5`, name: 'Pelvic tilts',           prescription: '1 × 20' },
+  { id: `${prefix}-mob-6`, name: 'Sciatic nerve floss',    prescription: '1 × 10', note: 'Each side' }
+];
+const GYM_CORE = (prefix) => [
+  { id: `${prefix}-core-1`, name: 'Tabletop knee raise',    prescription: '2 × 10' },
+  { id: `${prefix}-core-2`, name: 'Dead bug with band',     prescription: '2 × 30' },
+  { id: `${prefix}-core-3`, name: 'Ab crunches',            prescription: '2 × 30' },
+  { id: `${prefix}-core-4`, name: 'Shoulder taps',          prescription: '2 × 20', note: 'Close legs or open arms' },
+  { id: `${prefix}-core-5`, name: 'Side plank — leg raise', prescription: '2 × 15', note: 'Each side' },
+  { id: `${prefix}-core-6`, name: 'Plank',                  prescription: '2 × 45s' }
+];
+
 const DEFAULT_GYM = [
   {
     name: 'Gym · Day 1',
     blocks: [
-      { name: 'Mobility', exercises: [
-        { id: 'd1-dorsi',   name: 'Dorsiflexion',           prescription: '2 × 10' },
-        { id: 'd1-9090',    name: '90/90 Thoracic',         prescription: '2 × 10' },
-        { id: 'd1-floss',   name: 'Sciatic Nerve Floss (lying)', prescription: '2 × 10', note: 'Both sides' }
-      ]},
-      { name: 'Core', exercises: [
-        { id: 'd1-plank',   name: 'Side Plank',             prescription: '2 × 20s' },
-        { id: 'd1-pallof',  name: 'Pallof Press (standing)', prescription: '2 × 10', note: '10 each side' }
-      ]},
-      { name: 'Block 1', exercises: [
-        { id: 'd1-split',   name: 'Split Squat',            prescription: '3 × 8',  note: 'Start bodyweight, add load when ready' },
-        { id: 'd1-row',     name: 'Single-arm Row',         prescription: '3 × 8' },
-        { id: 'd1-calf',    name: 'Inclined Calf Raise',    prescription: '3 × 15', note: 'Progress toward 20 reps' }
-      ]},
-      { name: 'Block 2', exercises: [
-        { id: 'd1-bridge',  name: 'Single-leg Bridge',      prescription: '2 × 20s', note: "Hold 20s — don't let hip drop" },
-        { id: 'd1-press',   name: 'Alternating Press',      prescription: '2 × 8',  note: 'Light. Control back position.' },
-        { id: 'd1-pogo',    name: 'Pogo',                   prescription: '2 × 10s', note: '10s each direction' }
+      { name: 'Mobility', exercises: GYM_MOBILITY('g1') },
+      { name: 'Core',     exercises: GYM_CORE('g1') },
+      { name: 'Main sets', exercises: [
+        { id: 'g1-main-1', name: 'Lateral squats with ankle band',    prescription: '3 × 12', note: 'Each side' },
+        { id: 'g1-main-2', name: 'Single-leg step-up (24" bench)',    prescription: '3 × 10', note: 'Each leg' },
+        { id: 'g1-main-3', name: 'Single-leg glute bridge (bench)',   prescription: '3 × 10', note: 'Each leg' },
+        { id: 'g1-main-4', name: 'Flat bench press',                  prescription: '4 × 12-10-8-6', note: 'Pyramid — add weight each set' },
+        { id: 'g1-main-5', name: 'Dumbbell lunges',                   prescription: '3 × 10', note: 'Each leg' }
       ]},
       { name: 'Finisher', exercises: [
-        { id: 'd1-quad',    name: 'Quad ISO Hold',          prescription: '2 × 30s' }
+        { id: 'g1-fin-1', name: 'Triceps',                  prescription: '2 × 10' },
+        { id: 'g1-fin-2', name: 'Calf raises (machine)',    prescription: '2 × 10' },
+        { id: 'g1-fin-3', name: 'Lateral / front raises',   prescription: '2 × 10' },
+        { id: 'g1-fin-4', name: 'Forward tap (two steps)',  prescription: '2 × 10', note: 'Each side' }
       ]}
     ]
   },
   {
     name: 'Gym · Day 2',
     blocks: [
-      { name: 'Mobility', exercises: [
-        { id: 'd2-rb',      name: 'Adductor Rockback',      prescription: '2 × 10' },
-        { id: 'd2-floss',   name: 'Sciatic Nerve Floss',    prescription: '2 × 10', note: 'Both sides' },
-        { id: 'd2-step',    name: 'Lateral Step',           prescription: '2 × 10', note: 'Knee tracks over toes' }
-      ]},
-      { name: 'Core', exercises: [
-        { id: 'd2-deadbug', name: 'Dead Bug',               prescription: '2 × 10' },
-        { id: 'd2-add',     name: 'Short Adductor',         prescription: '2 × 15s', note: 'Glutes squeezed, core engaged' }
-      ]},
-      { name: 'Block 1', exercises: [
-        { id: 'd2-hip',     name: 'Single-leg Hip Thrust',  prescription: '3 × 10', note: 'Add load on hip when ready' },
-        { id: 'd2-press',   name: 'Single-arm Press',       prescription: '3 × 8' },
-        { id: 'd2-calfecc', name: 'Eccentric Calf',         prescription: '3 × 12', note: 'On step / plate, slow lowering' }
-      ]},
-      { name: 'Block 2', exercises: [
-        { id: 'd2-zercher', name: 'Zercher ISO',            prescription: '2 × 20s' },
-        { id: 'd2-invrow',  name: 'Inverted Row',           prescription: '2 × 8',  note: 'TRX or barbell' },
-        { id: 'd2-tap',     name: 'Diagonal Tap',           prescription: '2 × 10' }
+      { name: 'Mobility', exercises: GYM_MOBILITY('g2') },
+      { name: 'Core',     exercises: GYM_CORE('g2') },
+      { name: 'Main sets', exercises: [
+        { id: 'g2-main-1', name: 'Lateral squats with ankle band',    prescription: '3 × 12', note: 'Each side' },
+        { id: 'g2-main-2', name: 'Single-leg step-up (24" bench)',    prescription: '3 × 10', note: 'Each leg' },
+        { id: 'g2-main-3', name: 'Single-leg glute bridge (bench)',   prescription: '3 × 10', note: 'Each leg' },
+        { id: 'g2-main-4', name: 'Lat pulldown',                      prescription: '4 × 12-10-8-6', note: 'Pyramid — add weight each set' },
+        { id: 'g2-main-5', name: 'Dumbbell lunges',                   prescription: '3 × 10', note: 'Each leg' }
       ]},
       { name: 'Finisher', exercises: [
-        { id: 'd2-farmer',  name: 'Farmer Carry',           prescription: '2 × 60s', note: '~12 steps each side. Core controlled.' }
+        { id: 'g2-fin-1', name: 'Biceps',                   prescription: '2 × 10' },
+        { id: 'g2-fin-2', name: 'Calf raises (machine)',    prescription: '2 × 10' },
+        { id: 'g2-fin-3', name: 'Shoulder press',           prescription: '2 × 10' },
+        { id: 'g2-fin-4', name: 'Forward tap (two steps)',  prescription: '2 × 10', note: 'Each side' }
       ]}
     ]
   },
   {
     name: 'Gym · Day 3',
     blocks: [
-      { name: 'Mobility', exercises: [
-        { id: 'd3-thorax',  name: 'Thoracic + Hip Flexor',  prescription: '2 × 10' },
-        { id: 'd3-floss',   name: 'Sciatic Nerve Floss',    prescription: '2 × 10', note: 'Both sides' },
-        { id: 'd3-toe',     name: 'Toe Off',                prescription: '2 × 10' }
-      ]},
-      { name: 'Core', exercises: [
-        { id: 'd3-clam',    name: 'Clamshell Plank',        prescription: '2 × 10' },
-        { id: 'd3-bird',    name: 'Bird Dog',               prescription: '2 × 10', note: 'With band tension. Hips facing front.' }
-      ]},
-      { name: 'Block 1', exercises: [
-        { id: 'd3-goblet',  name: 'Goblet Squat',           prescription: '3 × 8',  note: 'Bodyweight first, then add dumbbell' },
-        { id: 'd3-pull',    name: 'Lat Pulldown',           prescription: '3 × 8' },
-        { id: 'd3-step3',   name: 'Lateral Step',           prescription: '3 × 10', note: 'Add load / height progressively' }
-      ]},
-      { name: 'Block 2', exercises: [
-        { id: 'd3-dl',      name: 'Asymmetric Deadlift',    prescription: '2 × 8',  note: 'Light. Hinge from hips, not back.' },
-        { id: 'd3-pushsc',  name: 'Scapular Push-up',       prescription: '2 × 10' },
-        { id: 'd3-takeoff', name: 'Take-off',               prescription: '2 × 10' }
+      { name: 'Mobility', exercises: GYM_MOBILITY('g3') },
+      { name: 'Core',     exercises: GYM_CORE('g3') },
+      { name: 'Main sets', exercises: [
+        { id: 'g3-main-1', name: 'Lateral squats with ankle band',    prescription: '3 × 12', note: 'Each side' },
+        { id: 'g3-main-2', name: 'Single-leg step-up (24" bench)',    prescription: '3 × 10', note: 'Each leg' },
+        { id: 'g3-main-3', name: 'Single-leg glute bridge (bench)',   prescription: '3 × 10', note: 'Each leg' },
+        { id: 'g3-main-4', name: 'Flat bench press',                  prescription: '4 × 12-10-8-6', note: 'Customize for Day 3 — defaults to Day 1' },
+        { id: 'g3-main-5', name: 'Dumbbell lunges',                   prescription: '3 × 10', note: 'Each leg' }
       ]},
       { name: 'Finisher', exercises: [
-        { id: 'd3-bridge',  name: 'Single-leg Bridge',      prescription: '2 × 20s', note: 'Heel farther from glutes to load hamstrings' }
+        { id: 'g3-fin-1', name: 'Triceps',                  prescription: '2 × 10' },
+        { id: 'g3-fin-2', name: 'Calf raises (machine)',    prescription: '2 × 10' },
+        { id: 'g3-fin-3', name: 'Lateral / front raises',   prescription: '2 × 10' },
+        { id: 'g3-fin-4', name: 'Forward tap (two steps)',  prescription: '2 × 10', note: 'Each side' }
       ]}
     ]
   }
@@ -569,6 +582,11 @@ function loadState() {
   // Old yoga had blocks — migrate to simple { name, notes }
   if (s.customYoga && Array.isArray(s.customYoga.blocks)) {
     s.customYoga = { name: s.customYoga.name || DEFAULT_YOGA.name, notes: '' };
+  }
+  // Force-reset gym when DEFAULT_GYM structure has been bumped
+  if (s.gymVersion !== GYM_VERSION) {
+    s.customGym = null;
+    s.gymVersion = GYM_VERSION;
   }
   s.customGym          = s.customGym          || null;
   s.customRunIntervals = s.customRunIntervals || null;
