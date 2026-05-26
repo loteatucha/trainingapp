@@ -311,6 +311,36 @@
   .routine-name-input:hover { background: var(--surface-3); }
   .routine-name-input:focus { outline: none; background: var(--accent-soft); }
 
+  /* Weekly summary card (Strava-style ring + day bars) */
+  .weekly-summary { background: var(--card); border: 1px solid var(--border); border-radius: 16px;
+    padding: 18px; margin-bottom: 12px; box-shadow: var(--shadow);
+    display: grid; grid-template-columns: 112px 1fr; gap: 18px; align-items: center; }
+  .weekly-ring { position: relative; width: 112px; height: 112px; }
+  .weekly-ring svg { width: 100%; height: 100%; display: block; }
+  .weekly-ring .ring-bg { stroke: var(--surface-3); stroke-width: 8; fill: none; }
+  .weekly-ring .ring-progress { stroke: var(--done); stroke-width: 8; fill: none; stroke-linecap: round;
+    transform: rotate(-90deg); transform-origin: center; transition: stroke-dashoffset .5s ease; }
+  .weekly-ring .count { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    font-size: 42px; font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; line-height: 1; }
+  .weekly-bars-side { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+  .weekly-goal { font-size: 14px; font-weight: 600; color: var(--ink); }
+  .weekly-goal strong { color: var(--accent); font-weight: 700; }
+  .day-bars { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; height: 60px; align-items: end; }
+  .day-bar-col { display: flex; flex-direction: column; align-items: center; gap: 6px;
+    justify-content: end; height: 100%; }
+  .day-bar { width: 8px; height: 5px; background: var(--border-strong); border-radius: 3px;
+    transition: height .3s ease, background .15s; }
+  .day-bar-col.active .day-bar { height: 44px; background: var(--done); }
+  .day-bar-col.future .day-bar { opacity: 0.45; }
+  .day-label { font-size: 11px; color: var(--muted); font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.08em; line-height: 1; }
+  .day-bar-col.today .day-label { color: var(--ink); }
+  @media (max-width: 380px) {
+    .weekly-summary { grid-template-columns: 96px 1fr; gap: 12px; padding: 14px; }
+    .weekly-ring { width: 96px; height: 96px; }
+    .weekly-ring .count { font-size: 36px; }
+  }
+
   /* History entries */
   .entry-row { display: grid; grid-template-columns: 70px 1fr auto; gap: 10px; padding: 12px 0;
     border-top: 1px solid var(--border); cursor: pointer; align-items: center; transition: background .15s; }
@@ -2303,9 +2333,65 @@ function entryStats(entry) {
 //  HISTORY VIEW
 // ============================================================
 
+const WEEKLY_GOAL = 5;
+
+function renderWeeklySummary(root) {
+  const today = todayISO();
+  const monday = startOfWeekISO(today);
+  const todayDow = dowFromISO(today);
+  const days = Array.from({length:7}, (_,i) => addDaysISO(monday, i));
+  const active = days.map(iso => {
+    const log = state.logs[iso];
+    return !!(log && log.workout && log.workout.status === 'done');
+  });
+  const count = active.filter(Boolean).length;
+  const r = 45;
+  const c = 2 * Math.PI * r;
+  const progress = Math.min(1, count / WEEKLY_GOAL);
+  const offset = c * (1 - progress);
+
+  const card = el('div', 'weekly-summary');
+
+  const ring = el('div', 'weekly-ring');
+  ring.innerHTML = `
+    <svg viewBox="0 0 100 100" aria-hidden="true">
+      <circle class="ring-bg" cx="50" cy="50" r="${r}"></circle>
+      <circle class="ring-progress" cx="50" cy="50" r="${r}"
+              stroke-dasharray="${c.toFixed(2)}" stroke-dashoffset="${offset.toFixed(2)}"></circle>
+    </svg>
+    <div class="count">${count}</div>
+  `;
+  card.appendChild(ring);
+
+  const side = el('div', 'weekly-bars-side');
+  const goalLine = el('div', 'weekly-goal');
+  goalLine.innerHTML = `Weekly goal: <strong>${WEEKLY_GOAL}</strong>`;
+  side.appendChild(goalLine);
+
+  const bars = el('div', 'day-bars');
+  const DOW = ['M','T','W','T','F','S','S'];
+  days.forEach((iso, i) => {
+    const dow = i + 1;
+    let classes = 'day-bar-col';
+    if (active[i]) classes += ' active';
+    if (iso === today) classes += ' today';
+    if (dow > todayDow) classes += ' future';
+    const col = el('div', classes);
+    col.appendChild(el('div', 'day-bar'));
+    col.appendChild(el('div', 'day-label', DOW[i]));
+    bars.appendChild(col);
+  });
+  side.appendChild(bars);
+
+  card.appendChild(side);
+  root.appendChild(card);
+}
+
 function renderHistory() {
   const root = document.getElementById('tab-history');
   root.innerHTML = '';
+
+  renderWeeklySummary(root);
 
   const entries = allEntries();
 
