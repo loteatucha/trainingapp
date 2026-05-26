@@ -1,5 +1,5 @@
 // Training app service worker — network-first with cache fallback
-const CACHE = 'training-app-v1';
+const CACHE = 'training-app-v2';
 const ASSETS = ['./', './index.html'];
 
 self.addEventListener('install', e => {
