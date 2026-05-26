@@ -251,6 +251,15 @@
   .wheel-col-label { text-align: center; font-size: 11px; color: var(--muted); text-transform: uppercase;
     letter-spacing: 0.1em; font-weight: 600; margin-bottom: 6px; }
 
+  /* Picker field — tap-to-open button used for run/swim/yoga inputs */
+  .picker-field { width: 100%; padding: 10px 12px; border: 1px solid var(--border);
+    border-radius: 10px; background: var(--surface-2); color: var(--ink); font: inherit;
+    font-size: 15px; font-weight: 600; text-align: center; cursor: pointer;
+    transition: background .15s, border-color .15s; font-variant-numeric: tabular-nums;
+    min-height: 44px; display: flex; align-items: center; justify-content: center; }
+  .picker-field:hover, .picker-field:active { background: var(--surface-3); border-color: var(--border-strong); }
+  .picker-field.empty { color: var(--muted); font-weight: 400; font-size: 18px; }
+
   /* Prescription button (in Plan editor) */
   .prescription-btn { display: flex; align-items: center; justify-content: center;
     width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px;
@@ -566,6 +575,18 @@ function loadState() {
   s.customRunLong      = s.customRunLong      || null;
   s.customSwim         = s.customSwim         || null;
   s.customYoga         = s.customYoga         || null;
+  // One-shot migration: legacy decimal duration/pace ("5.47") → MM:SS ("5:47")
+  Object.values(s.logs || {}).forEach(log => {
+    const f = log && log.workout && log.workout.fields;
+    if (!f) return;
+    ['duration', 'avgPace'].forEach(k => {
+      const v = f[k];
+      if (typeof v === 'string' && /^\d+\.\d{1,2}$/.test(v)) {
+        const [m, sec] = v.split('.');
+        f[k] = m + ':' + sec.padStart(2, '0');
+      }
+    });
+  });
   s.viewISO = null;
   return s;
 }
@@ -827,7 +848,12 @@ function computeTodayProgress(sched, log) {
 }
 
 function ensureWorkout(log, sched) {
-  if (!log.workout) log.workout = { type: sched.type, sets: {}, completed: {}, fields: {}, status: 'pending', notes: '' };
+  if (!log.workout) {
+    log.workout = { type: sched.type, sets: {}, completed: {}, fields: {}, status: 'pending', notes: '' };
+  } else if (sched && sched.type && log.workout.type !== sched.type) {
+    // Schedule was swapped after the log was first created — keep type in sync
+    log.workout.type = sched.type;
+  }
   if (!log.workout.completed) log.workout.completed = {};
   if (!log.workout.sets) log.workout.sets = {};
   if (!log.workout.fields) log.workout.fields = {};
@@ -902,16 +928,16 @@ function appendLastSession(container, last, iso, type) {
   const parts = [];
   if (type === 'run') {
     if (f.distance) parts.push(f.distance + ' km');
-    if (f.duration) parts.push(f.duration + ' min');
-    if (f.avgPace) parts.push(f.avgPace);
+    if (f.duration) parts.push(f.duration);
+    if (f.avgPace) parts.push(f.avgPace + '/km');
     if (f.rpe) parts.push('RPE ' + f.rpe);
   } else if (type === 'swim') {
     if (f.distance) parts.push(f.distance + ' m');
-    if (f.duration) parts.push(f.duration + ' min');
+    if (f.duration) parts.push(f.duration);
     if (f.intervals) parts.push(f.intervals);
     if (f.rpe) parts.push('RPE ' + f.rpe);
   } else if (type === 'yoga') {
-    if (f.duration) parts.push(f.duration + ' min');
+    if (f.duration) parts.push(f.duration);
     if (f.rpe) parts.push('Felt ' + f.rpe);
   }
   parts.forEach(p => {
@@ -1408,6 +1434,158 @@ function openPrescriptionPicker(current, onPick) {
   doneBtn.onclick = () => close(true);
 }
 
+// === Time / distance helpers (for run + swim) ===
+function parseTimeMS(s) {
+  if (!s) return [0, 0];
+  if (typeof s === 'string' && s.includes(':')) {
+    const parts = s.split(':').map(p => parseInt(p, 10) || 0);
+    return [parts[0] || 0, parts[1] || 0];
+  }
+  const num = parseFloat(s);
+  if (isNaN(num)) return [0, 0];
+  const min = Math.floor(num);
+  const sec = Math.round((num - min) * 60);
+  return [min, sec === 60 ? 0 : sec];
+}
+function formatTimeMS(min, sec) {
+  return `${min}:${String(sec).padStart(2, '0')}`;
+}
+function parseDurationToMinutes(s) {
+  if (!s) return NaN;
+  if (typeof s === 'string' && s.includes(':')) {
+    const parts = s.split(':').map(p => parseInt(p, 10) || 0);
+    if (parts.length === 2) return parts[0] + parts[1] / 60;
+    if (parts.length === 3) return parts[0] * 60 + parts[1] + parts[2] / 60;
+  }
+  return parseFloat(s);
+}
+function parseDistanceKM(s) {
+  if (!s) return [0, 0];
+  const num = parseFloat(s);
+  if (isNaN(num)) return [0, 0];
+  const km = Math.floor(num);
+  const m = Math.round((num - km) * 1000 / 10) * 10;
+  return [km, m === 1000 ? 0 : m];
+}
+function formatDistanceKM(km, m) {
+  return (km + m / 1000).toFixed(2);
+}
+
+// Multi-wheel picker (generic — used for duration, pace, distance)
+function openMultiWheelPicker(opts, onPick) {
+  let backdrop = document.getElementById('sheet-backdrop');
+  if (!backdrop) {
+    backdrop = el('div', 'sheet-backdrop');
+    backdrop.id = 'sheet-backdrop';
+    document.body.appendChild(backdrop);
+  }
+  const existing = document.getElementById('picker-sheet');
+  if (existing) existing.remove();
+
+  const sheet = el('div', 'sheet');
+  sheet.id = 'picker-sheet';
+  sheet.appendChild(el('div', 'sheet-handle'));
+
+  const head = el('div', 'sheet-head');
+  const cancelBtn = el('button', 'sheet-cancel', 'Cancel');
+  const doneBtn = el('button', 'sheet-done', 'Done');
+  head.appendChild(cancelBtn);
+  head.appendChild(el('div', 'sheet-title', opts.title || ''));
+  head.appendChild(doneBtn);
+  sheet.appendChild(head);
+
+  const wheelsRow = el('div', 'wheels-row');
+  wheelsRow.style.gridTemplateColumns = `repeat(${opts.wheels.length}, 1fr)`;
+  const components = opts.wheels.map(spec => {
+    const col = el('div', 'wheel-col');
+    col.appendChild(el('div', 'wheel-col-label', spec.label));
+    const comp = makeWheelComponent(spec.options, spec.value, spec.suffix || '');
+    col.appendChild(comp.el);
+    wheelsRow.appendChild(col);
+    return comp;
+  });
+  sheet.appendChild(wheelsRow);
+
+  document.body.appendChild(sheet);
+
+  const close = (commit) => {
+    sheet.classList.remove('open');
+    backdrop.classList.remove('open');
+    setTimeout(() => sheet.remove(), 280);
+    if (commit && onPick) onPick(components.map(c => c.getValue()));
+  };
+  backdrop.onclick = () => close(false);
+  cancelBtn.onclick = () => close(false);
+  doneBtn.onclick = () => close(true);
+
+  requestAnimationFrame(() => {
+    backdrop.classList.add('open');
+    sheet.classList.add('open');
+    components.forEach(c => c.syncScroll());
+  });
+}
+
+function openDurationPicker(currentValue, onPick) {
+  const [min, sec] = parseTimeMS(currentValue);
+  openMultiWheelPicker({
+    title: 'Duration',
+    wheels: [
+      { label: 'Min', value: min, options: rangeOptions(0, 180, 1) },
+      { label: 'Sec', value: sec, options: rangeOptions(0, 59, 1) }
+    ]
+  }, ([m, s]) => onPick(formatTimeMS(m, s)));
+}
+
+function openPacePicker(currentValue, onPick) {
+  const [min, sec] = parseTimeMS(currentValue);
+  openMultiWheelPicker({
+    title: 'Avg pace · per km',
+    wheels: [
+      { label: 'Min', value: min || 5, options: rangeOptions(3, 12, 1) },
+      { label: 'Sec', value: sec || 0, options: rangeOptions(0, 55, 5) }
+    ]
+  }, ([m, s]) => onPick(formatTimeMS(m, s)));
+}
+
+function openDistanceKmPicker(currentValue, onPick) {
+  const [km, m] = parseDistanceKM(currentValue);
+  openMultiWheelPicker({
+    title: 'Distance',
+    wheels: [
+      { label: 'km', value: km, options: rangeOptions(0, 50, 1) },
+      { label: 'm',  value: m,  options: rangeOptions(0, 990, 10) }
+    ]
+  }, ([k, mm]) => onPick(formatDistanceKM(k, mm)));
+}
+
+function openDistanceMPicker(currentValue, onPick) {
+  const val = parseInt(currentValue, 10) || 0;
+  openWheelPicker({
+    value: val,
+    options: rangeOptions(0, 5000, 25),
+    label: 'Distance (m)',
+    suffix: 'm'
+  }, (v) => onPick(String(v)));
+}
+
+// pickerField — like field() but opens a sheet on tap instead of editing inline
+function pickerField(label, getDisplay, onTap) {
+  const wrap = el('div');
+  wrap.appendChild(el('label', 'muted', label));
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'picker-field';
+  const update = () => {
+    const d = getDisplay();
+    btn.textContent = d || '–';
+    btn.classList.toggle('empty', !d);
+  };
+  update();
+  btn.addEventListener('click', () => onTap(update));
+  wrap.appendChild(btn);
+  return wrap;
+}
+
 function makeSetRow(s, i, timeBased, lastSet) {
   const row = el('div', 'set-row');
   row.appendChild(el('div', 'set-num', String(i+1)));
@@ -1452,16 +1630,28 @@ function renderRunBody(container, variant, iso, log, onChange) {
   const lastRun = lastTypeSession('run', iso);
   if (lastRun) appendLastSession(container, lastRun, iso, 'run');
 
-  // Session-level fields
   const fields = w.fields;
   const ig = el('div', 'input-grid');
-  ig.appendChild(field('distance', 'Distance (km)', fields.distance, v => { fields.distance = v; saveState(); }));
-  ig.appendChild(field('duration', 'Duration (min)', fields.duration, v => { fields.duration = v; saveState(); }));
-  ig.appendChild(field('avgPace', 'Avg pace', fields.avgPace, v => { fields.avgPace = v; saveState(); }, 'text'));
-  ig.appendChild(field('rpe',     'RPE (1–10)',    fields.rpe,     v => { fields.rpe = v;      saveState(); }));
+
+  ig.appendChild(pickerField('Distance',
+    () => fields.distance ? fields.distance + ' km' : '',
+    (refresh) => openDistanceKmPicker(fields.distance, (v) => { fields.distance = v; saveState(); refresh(); })
+  ));
+  ig.appendChild(pickerField('Duration',
+    () => fields.duration ? fields.duration : '',
+    (refresh) => openDurationPicker(fields.duration, (v) => { fields.duration = v; saveState(); refresh(); })
+  ));
+  ig.appendChild(pickerField('Avg pace · per km',
+    () => fields.avgPace ? fields.avgPace : '',
+    (refresh) => openPacePicker(fields.avgPace, (v) => { fields.avgPace = v; saveState(); refresh(); })
+  ));
+  ig.appendChild(pickerField('RPE',
+    () => fields.rpe ? String(fields.rpe) : '',
+    (refresh) => openWheelPicker({ value: fields.rpe, options: rangeOptions(0, 10, 0.5), label: 'RPE (1–10)' },
+      (v) => { fields.rpe = String(v); saveState(); refresh(); })
+  ));
   container.appendChild(ig);
 
-  // Routine segments (checklist style — no per-exercise sets)
   renderRoutineExercises(container, routine, iso, log, { trackSets: false, onChange });
   container.appendChild(notesArea(w, 'Session notes'));
 }
@@ -1471,11 +1661,22 @@ function renderSwimBody(container, iso, log, onChange) {
   const lastSwim = lastTypeSession('swim', iso);
   if (lastSwim) appendLastSession(container, lastSwim, iso, 'swim');
 
+  const f = w.fields;
   const ig = el('div', 'input-grid');
-  ig.appendChild(field('distance', 'Distance (m)', w.fields.distance, v => { w.fields.distance = v; saveState(); }));
-  ig.appendChild(field('duration', 'Duration (min)', w.fields.duration, v => { w.fields.duration = v; saveState(); }));
-  ig.appendChild(field('intervals', 'Intervals / sets', w.fields.intervals, v => { w.fields.intervals = v; saveState(); }, 'text'));
-  ig.appendChild(field('rpe', 'RPE (1–10)', w.fields.rpe, v => { w.fields.rpe = v; saveState(); }));
+  ig.appendChild(pickerField('Distance',
+    () => f.distance ? f.distance + ' m' : '',
+    (refresh) => openDistanceMPicker(f.distance, (v) => { f.distance = v; saveState(); refresh(); })
+  ));
+  ig.appendChild(pickerField('Duration',
+    () => f.duration ? f.duration : '',
+    (refresh) => openDurationPicker(f.duration, (v) => { f.duration = v; saveState(); refresh(); })
+  ));
+  ig.appendChild(field('intervals', 'Intervals / sets', f.intervals, v => { f.intervals = v; saveState(); }, 'text'));
+  ig.appendChild(pickerField('RPE',
+    () => f.rpe ? String(f.rpe) : '',
+    (refresh) => openWheelPicker({ value: f.rpe, options: rangeOptions(0, 10, 0.5), label: 'RPE (1–10)' },
+      (v) => { f.rpe = String(v); saveState(); refresh(); })
+  ));
   container.appendChild(ig);
 
   renderRoutineExercises(container, getSwim(), iso, log, { trackSets: false, onChange });
@@ -1488,16 +1689,23 @@ function renderYogaBody(container, iso, log, onChange) {
   const lastYoga = lastTypeSession('yoga', iso);
   if (lastYoga) appendLastSession(container, lastYoga, iso, 'yoga');
 
-  // Class label
   const cls = el('div', 'class-card');
   cls.appendChild(el('div', 'class-title', yoga.name));
   if (yoga.notes) cls.appendChild(el('div', 'class-notes', yoga.notes));
   cls.appendChild(el('div', 'class-hint', 'No exercises to track — just log when complete.'));
   container.appendChild(cls);
 
+  const f = w.fields;
   const ig = el('div', 'input-grid');
-  ig.appendChild(field('duration', 'Duration (min)', w.fields.duration, v => { w.fields.duration = v; saveState(); }));
-  ig.appendChild(field('rpe', 'Felt (1–10)', w.fields.rpe, v => { w.fields.rpe = v; saveState(); }));
+  ig.appendChild(pickerField('Duration',
+    () => f.duration ? f.duration : '',
+    (refresh) => openDurationPicker(f.duration, (v) => { f.duration = v; saveState(); refresh(); })
+  ));
+  ig.appendChild(pickerField('Felt',
+    () => f.rpe ? String(f.rpe) : '',
+    (refresh) => openWheelPicker({ value: f.rpe, options: rangeOptions(0, 10, 0.5), label: 'Felt (1–10)' },
+      (v) => { f.rpe = String(v); saveState(); refresh(); })
+  ));
   container.appendChild(ig);
 
   container.appendChild(notesArea(w, 'Session notes'));
@@ -2069,8 +2277,8 @@ function entryStats(entry) {
     if (exs.length) out.push(`${completed}/${exs.length} segments`);
     const f = w.fields || {};
     if (f.distance) out.push(`${f.distance} km`);
-    if (f.duration) out.push(`${f.duration} min`);
-    if (f.avgPace)  out.push(`${f.avgPace}`);
+    if (f.duration) out.push(`${f.duration}`);
+    if (f.avgPace)  out.push(`${f.avgPace}/km`);
     if (f.rpe)      out.push(`RPE ${f.rpe}`);
   } else if (w.type === 'swim') {
     const exs = w.snapshot?.exercises || [];
@@ -2078,11 +2286,11 @@ function entryStats(entry) {
     if (exs.length) out.push(`${completed}/${exs.length} exercises`);
     const f = w.fields || {};
     if (f.distance) out.push(`${f.distance} m`);
-    if (f.duration) out.push(`${f.duration} min`);
+    if (f.duration) out.push(`${f.duration}`);
     if (f.rpe)      out.push(`RPE ${f.rpe}`);
   } else if (w.type === 'yoga') {
     const f = w.fields || {};
-    if (f.duration) out.push(`${f.duration} min`);
+    if (f.duration) out.push(`${f.duration}`);
     if (f.rpe)      out.push(`Felt ${f.rpe}`);
   }
   return out;
@@ -2107,14 +2315,15 @@ function renderHistory() {
   head.appendChild(hr);
   head.appendChild(el('div', 'muted', `${entries.length} completed ${entries.length === 1 ? 'entry' : 'entries'}`));
 
-  // simple summary stats
+  // simple summary stats — prefer snapshot.workoutType when available
   if (entries.length) {
     const totals = entries.reduce((acc, e) => {
       const w = e.log.workout;
-      acc.byType[w.type] = (acc.byType[w.type] || 0) + 1;
-      if (w.type === 'run') {
+      const type = (w.snapshot && w.snapshot.workoutType) || w.type;
+      acc.byType[type] = (acc.byType[type] || 0) + 1;
+      if (type === 'run') {
         const k = parseFloat(w.fields?.distance); if (!isNaN(k)) acc.runKm += k;
-        const m = parseFloat(w.fields?.duration); if (!isNaN(m)) acc.runMin += m;
+        const m = parseDurationToMinutes(w.fields?.duration); if (!isNaN(m)) acc.runMin += m;
       }
       return acc;
     }, { byType: {}, runKm: 0, runMin: 0 });
@@ -2165,12 +2374,13 @@ function renderHistory() {
       const lhs = el('div', 'entry-lhs');
       const date = new Date(e.iso + 'T12:00:00');
       const dayShort = date.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric' });
+      const effectiveType = (w.snapshot && w.snapshot.workoutType) || w.type;
       lhs.appendChild(el('div', 'entry-date', dayShort));
-      lhs.appendChild(el('div', 'entry-type-pill', typeShort(w.type)));
+      lhs.appendChild(el('div', 'entry-type-pill', typeShort(effectiveType)));
       row.appendChild(lhs);
 
       const mid = el('div', 'entry-mid');
-      mid.appendChild(el('div', 'entry-title', e.log.workout.snapshot?.workoutLabel || workoutLabel({ type: w.type, dayIdx: 0 })));
+      mid.appendChild(el('div', 'entry-title', e.log.workout.snapshot?.workoutLabel || workoutLabel({ type: effectiveType, dayIdx: 0 })));
       const stats = entryStats(e);
       if (stats.length) mid.appendChild(el('div', 'entry-stats', stats.join(' · ')));
       if (w.notes) mid.appendChild(el('div', 'entry-note', '"' + w.notes.slice(0, 90) + (w.notes.length > 90 ? '…' : '') + '"'));
