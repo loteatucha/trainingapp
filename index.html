@@ -393,10 +393,6 @@
     <h1>Training</h1>
     <div class="sub" id="todayLabel"></div>
   </div>
-  <div class="toolbar">
-    <button class="btn ghost small" id="todayBtn" title="Jump to today">Today</button>
-    <button class="btn ghost small" id="syncBtn" title="Export to Drive">Sync</button>
-  </div>
 </div>
 
 <div class="tabs">
@@ -738,17 +734,6 @@ document.querySelectorAll('.tab').forEach(t => {
     if (tab === 'history') renderHistory();
     if (tab === 'plan')    renderPlan();
   });
-});
-
-document.getElementById('todayBtn').addEventListener('click', () => {
-  state.viewISO = todayISO();
-  document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
-  document.querySelector('.tab[data-tab="today"]').classList.add('active');
-  document.getElementById('tab-today').style.display = '';
-  document.getElementById('tab-week').style.display = 'none';
-  document.getElementById('tab-history').style.display = 'none';
-  document.getElementById('tab-plan').style.display = 'none';
-  renderToday();
 });
 
 // ============================================================
@@ -2325,12 +2310,7 @@ function renderHistory() {
   const entries = allEntries();
 
   const head = el('div', 'card');
-  const hr = el('div', 'plan-section-head');
-  hr.appendChild(el('h2', null, 'History'));
-  const exportBtn = el('button', 'btn small', 'Export all to Drive');
-  exportBtn.addEventListener('click', exportAllEntries);
-  hr.appendChild(exportBtn);
-  head.appendChild(hr);
+  head.appendChild(el('h2', null, 'History'));
   head.appendChild(el('div', 'muted', `${entries.length} completed ${entries.length === 1 ? 'entry' : 'entries'}`));
 
   // simple summary stats — prefer snapshot.workoutType when available
@@ -2431,107 +2411,6 @@ function typeShort(t) {
   return ({ gym: 'GYM', run: 'RUN', swim: 'SWIM', yoga: 'YOGA', rest: 'REST' })[t] || t.toUpperCase();
 }
 
-async function exportAllEntries() {
-  const entries = allEntries();
-  if (!entries.length) { toast('Nothing to export'); return; }
-  const lines = [];
-  lines.push(`# Training entries · ${entries.length} sessions`);
-  lines.push(`Generated ${new Date().toLocaleString()}`);
-  lines.push('');
-  entries.forEach(e => {
-    const w = e.log.workout;
-    const stamp = w.completedAt ? new Date(w.completedAt).toLocaleString() : '';
-    lines.push(`## ${e.iso} · ${w.snapshot?.workoutLabel || w.type}`);
-    if (stamp) lines.push(`*completed: ${stamp}*`);
-    const stats = entryStats(e);
-    if (stats.length) lines.push(stats.join(' · '));
-    if (w.type === 'gym' && w.snapshot?.exercises) {
-      lines.push('');
-      w.snapshot.exercises.forEach(ex => {
-        const check = ex.completed ? '[x]' : '[ ]';
-        const setStrs = (ex.sets || []).filter(s => s.reps || s.kg || s.rpe)
-          .map(s => `${s.reps || '-'}${s.kg ? '·'+s.kg : ''}${s.rpe ? '@'+s.rpe : ''}`).join(' | ');
-        lines.push(`- ${check} **${ex.name}** (${ex.prescription}) — ${setStrs || '—'}`);
-      });
-    } else if (w.fields) {
-      const parts = Object.entries(w.fields).filter(([k,v]) => v).map(([k,v]) => `${k}: ${v}`);
-      if (parts.length) { lines.push(''); parts.forEach(p => lines.push(`- ${p}`)); }
-    }
-    if (w.notes) { lines.push(''); lines.push('> ' + w.notes); }
-    lines.push('');
-  });
-  const content = lines.join('\n');
-
-  if (!window.cowork || !window.cowork.callMcpTool) {
-    try { await navigator.clipboard.writeText(content); toast('Copied to clipboard'); }
-    catch (e) { toast('Export not available'); }
-    return;
-  }
-  toast('Exporting…');
-  try {
-    await window.cowork.callMcpTool('mcp__4b253c6e-714e-46ae-b887-8fd42a1ad70e__create_file', {
-      title: `Training entries ${todayISO()}`,
-      mimeType: 'text/markdown',
-      parents: ['1D9_CywxdjPlUalMw9Klmw0rbLnvF6uUF'],
-      content
-    });
-    toast('Exported ✓');
-  } catch (e) {
-    console.error(e); toast('Export failed');
-  }
-}
-
-// ============================================================
-//  SYNC TO DRIVE
-// ============================================================
-
-document.getElementById('syncBtn').addEventListener('click', async () => {
-  const today = todayISO();
-  const monday = startOfWeekISO(state.viewISO || today);
-  const days = Array.from({length:7}, (_,i) => addDaysISO(monday, i));
-  const lines = [];
-  lines.push(`# Training log snapshot · week of ${monday}`);
-  lines.push('');
-  days.forEach((iso, i) => {
-    const sched = getEffectiveSchedule(iso);
-    const log = state.logs[iso] || {};
-    const status = log.workout?.status || 'pending';
-    lines.push(`## ${iso} · ${workoutLabel(sched)} · ${status}`);
-    if (log.workout?.sets) {
-      Object.entries(log.workout.sets).forEach(([id, sets]) => {
-        const setStrs = sets.map(s => `${s.reps || '-'} ${s.kg ? '· '+s.kg : ''} ${s.rpe?('@RPE'+s.rpe):''}`.trim()).join(' | ');
-        lines.push(`- ${id}: ${setStrs}`);
-      });
-    }
-    if (log.workout?.fields) {
-      const f = log.workout.fields;
-      const parts = Object.entries(f).filter(([k,v])=>v).map(([k,v])=>`${k}=${v}`);
-      if (parts.length) lines.push(`- session: ${parts.join(', ')}`);
-    }
-    if (log.workout?.notes) lines.push(`- notes: ${log.workout.notes}`);
-    lines.push('');
-  });
-  const content = lines.join('\n');
-
-  if (!window.cowork || !window.cowork.callMcpTool) {
-    try { await navigator.clipboard.writeText(content); toast('Copied snapshot to clipboard'); }
-    catch (e) { toast('Sync not available'); }
-    return;
-  }
-  toast('Syncing to Drive…');
-  try {
-    await window.cowork.callMcpTool('mcp__4b253c6e-714e-46ae-b887-8fd42a1ad70e__create_file', {
-      title: `Training log ${monday}`,
-      mimeType: 'text/markdown',
-      parents: ['1D9_CywxdjPlUalMw9Klmw0rbLnvF6uUF'],
-      content
-    });
-    toast('Synced ✓');
-  } catch (e) {
-    console.error(e);
-    toast('Sync failed — check console');
-  }
-});
 
 // ============================================================
 //  UTILS
