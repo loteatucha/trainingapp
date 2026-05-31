@@ -107,6 +107,19 @@
   .last-session .when { font-weight: 700; color: var(--accent); }
   .last-session .sep { opacity: 0.4; }
 
+  /* Compact warm-up row (Today) — check-off only, no reps/weight/RPE logging */
+  .ex-lite { display: flex; align-items: center; gap: 10px; padding: 8px 6px; border-radius: 8px; cursor: pointer; transition: background .15s; }
+  .ex-lite:hover, .ex-lite:active { background: var(--surface-2); }
+  .ex-lite + .ex-lite { border-top: 1px solid var(--border); }
+  .ex-lite .ex-check { pointer-events: none; flex: 0 0 auto; width: 22px; height: 22px; }
+  .ex-lite-reps { flex: 0 0 auto; min-width: 46px; text-align: right; color: var(--accent); font-weight: 700;
+    font-size: 13px; font-variant-numeric: tabular-nums; }
+  .ex-lite-main { flex: 1; min-width: 0; display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+  .ex-lite-name { font-size: 14px; font-weight: 500; color: var(--ink); }
+  .ex-lite-note { font-size: 12px; color: var(--muted); font-style: italic; }
+  .ex-lite.completed { opacity: 0.8; }
+  .ex-lite.completed .ex-lite-name { color: var(--done); text-decoration: line-through; text-decoration-color: rgba(52,211,153,0.6); }
+
   /* Set rows — wheel picker triggers */
   .ex-sets { margin-top: 10px; display: grid; gap: 8px; }
   .set-row { display: grid; grid-template-columns: 28px 1fr 1fr 1fr; gap: 8px; align-items: stretch; }
@@ -151,11 +164,6 @@
     border-radius: 10px; cursor: pointer; font-size: 12px; font-weight: 600; transition: color .15s, border-color .15s; }
   .add-set:hover { color: var(--accent); border-color: var(--accent); }
 
-  /* Cardio session */
-  .cardio-block { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; margin: 8px 0 12px; }
-  .cardio-cell { background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; }
-  .cardio-cell .label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 2px; }
-  .cardio-cell .value { font-weight: 600; font-size: 16px; color: var(--ink); }
   .input-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .input-grid label { font-size: 12px; color: var(--muted); display: block; margin-bottom: 4px; }
   .input-grid input, .full-input textarea, .full-input input { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px;
@@ -188,6 +196,13 @@
   .day-row.skipped .movable-content { opacity: 0.55; }
   .movable-content.dragging-source { opacity: 0.25; transform: scale(.98); }
   .day-row.drag-over .movable-content { background: var(--accent-soft); border-color: var(--accent); transform: scale(1.015); }
+  /* Settled days: past dimmed, today highlighted, locked rows show a lock */
+  .day-row.past:not(.completed) .movable-content { opacity: 0.5; }
+  .day-row.past .day-date .dnum { color: var(--muted); }
+  .day-row.today .day-date .dow { color: var(--accent); }
+  .day-lock { display: flex; align-items: center; justify-content: center;
+    min-height: 44px; min-width: 36px; font-size: 13px; opacity: 0.55;
+    filter: grayscale(1); user-select: none; }
 
   .day-row .day-workout { display: flex; align-items: center; gap: 12px; min-width: 0; }
   .day-row .day-workout .icon { font-size: 28px; line-height: 1; flex: 0 0 auto; }
@@ -259,6 +274,9 @@
     min-height: 44px; display: flex; align-items: center; justify-content: center; }
   .picker-field:hover, .picker-field:active { background: var(--surface-3); border-color: var(--border-strong); }
   .picker-field.empty { color: var(--muted); font-weight: 400; font-size: 18px; }
+  .picker-field.readonly { cursor: default; color: var(--accent); }
+  .picker-field.readonly:hover, .picker-field.readonly:active { background: var(--surface-2); border-color: var(--border); }
+  .picker-field.readonly.empty { color: var(--muted); }
 
   /* Prescription button (in Plan editor) */
   .prescription-btn { display: flex; align-items: center; justify-content: center; gap: 4px;
@@ -284,14 +302,32 @@
 
   /* Plan editor */
   .plan-section-head { display: flex; justify-content: space-between; align-items: center; }
-  .plan-edit-row { display: grid; grid-template-columns: 1.4fr 1fr; gap: 8px; align-items: center; padding: 8px 0; border-bottom: 1px dashed var(--border); }
-  .plan-edit-row.three { grid-template-columns: 1.4fr 1fr 28px; }
-  .plan-edit-row .note-row { grid-column: 1 / -1; }
-  .plan-edit-row input, .plan-edit-row textarea { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; font: inherit; font-size: 13px; background: var(--surface-2); color: var(--ink); }
-  .plan-edit-row input:focus, .plan-edit-row textarea:focus { outline: none; border-color: var(--accent); }
-  .plan-edit-row textarea { resize: vertical; min-height: 36px; font-size: 12px; }
+  /* Compact exercise list (Notes-style) — one tappable line per exercise */
+  .plan-ex-row { display: flex; align-items: baseline; gap: 12px; padding: 7px 4px; }
+  .plan-ex-row + .plan-ex-row { border-top: 1px solid var(--border); }
+  .plan-ex-reps { flex: 0 0 auto; min-width: 56px; text-align: right; color: var(--accent);
+    font-weight: 700; font-size: 14px; font-variant-numeric: tabular-nums; cursor: pointer;
+    padding: 3px 6px; margin: -3px 0; border-radius: 6px; transition: background .15s; }
+  .plan-ex-reps:hover, .plan-ex-reps:active { background: var(--accent-soft); }
+  .plan-ex-main { flex: 1; min-width: 0; cursor: pointer; display: flex; align-items: baseline;
+    gap: 8px; flex-wrap: wrap; padding: 3px 6px; margin: -3px 0; border-radius: 6px; transition: background .15s; }
+  .plan-ex-main:hover, .plan-ex-main:active { background: var(--surface-2); }
+  .plan-ex-name { font-size: 14px; font-weight: 500; color: var(--ink); }
+  .plan-ex-presc { font-size: 13px; color: var(--accent); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .plan-ex-note { font-size: 12px; color: var(--muted); font-style: italic; }
+  /* Run target row (Plan) */
+  .run-targets { margin: 10px 0 4px; }
+  .run-targets-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent); margin-bottom: 8px; }
   .icon-btn { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 16px; padding: 4px 8px; border-radius: 6px; transition: color .15s, background .15s; }
   .icon-btn:hover { color: var(--skip); background: rgba(248, 113, 113, 0.14); }
+
+  /* Exercise editor sheet (tap a name to rename / note / delete) */
+  .ex-editor { display: flex; flex-direction: column; padding: 2px 0 6px; }
+  .ex-editor-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin: 12px 0 5px; }
+  .ex-editor-input { width: 100%; padding: 11px 12px; border: 1px solid var(--border); border-radius: 10px;
+    font: inherit; font-size: 15px; background: var(--surface-2); color: var(--ink); }
+  .ex-editor-input:focus { outline: none; border-color: var(--accent); }
+  .ex-editor .del-ex { margin-top: 18px; align-self: flex-start; }
 
   /* Routine box (Plan tab — one per workout type) */
   .routine-box { padding: 12px 14px; }
@@ -340,6 +376,31 @@
     .weekly-ring { width: 96px; height: 96px; }
     .weekly-ring .count { font-size: 36px; }
   }
+
+  /* Progress charts (run + swim) */
+  .chart-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px;
+    padding: 16px; margin-bottom: 12px; box-shadow: var(--shadow); }
+  .chart-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .chart-title { font-size: 15px; font-weight: 700; color: var(--ink); display: flex; align-items: center; gap: 8px; }
+  .chart-title .dot { width: 10px; height: 10px; border-radius: 50%; flex: 0 0 10px; }
+  .chart-sub { font-size: 12px; color: var(--muted); margin: 6px 0 12px; min-height: 14px; }
+  .chart-toggle { display: flex; gap: 2px; background: var(--surface-2); padding: 3px; border-radius: 10px; }
+  .chart-toggle button { appearance: none; border: none; background: transparent; color: var(--muted);
+    font-size: 12px; font-weight: 600; padding: 6px 13px; border-radius: 8px; cursor: pointer;
+    transition: background .15s, color .15s; }
+  .chart-toggle button.active { background: var(--surface-3); color: var(--ink); }
+  .chart-svg { width: 100%; height: auto; display: block; overflow: visible; }
+  .chart-svg .grid-line { stroke: var(--border); stroke-width: 1; }
+  .chart-svg .axis-label { fill: var(--muted); font-size: 9px; font-weight: 600; font-family: inherit; }
+  .chart-svg .bar-empty { fill: var(--border-strong); }
+  .chart-svg .dot-pt { stroke: var(--card); stroke-width: 1.5px; }
+  .chart-legend { display: flex; gap: 16px; margin-top: 10px; }
+  .chart-legend span { font-size: 11px; color: var(--muted); display: flex; align-items: center; gap: 5px; }
+  .chart-legend i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+  .chart-empty { text-align: center; padding: 22px 12px; color: var(--muted); font-size: 13px; }
+  .timeframe-row { display: flex; justify-content: flex-end; margin-bottom: 10px; }
+  .backup-row { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+  .backup-row .btn { flex: 1 1 auto; }
 
   /* History entries */
   .entry-row { display: grid; grid-template-columns: 70px 1fr auto; gap: 10px; padding: 12px 0;
@@ -396,19 +457,6 @@
   @media (max-width: 480px) {
     body { padding: max(12px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) max(80px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left)); }
     .topbar h1 { font-size: 21px; }
-    .plan-edit-row { grid-template-columns: 1fr; gap: 8px; padding: 10px 0; }
-    /* Mobile: name + delete on row 1, prescription full-width row 2, notes row 3 */
-    .plan-edit-row.three {
-      grid-template-columns: 1fr 36px;
-      grid-template-areas: "name del" "presc presc";
-      gap: 8px 6px;
-    }
-    .plan-edit-row.three > :nth-child(1) { grid-area: name; }
-    .plan-edit-row.three > :nth-child(2) { grid-area: presc; }
-    .plan-edit-row.three > :nth-child(3) { grid-area: del; }
-    .plan-edit-row.three > .note-row { grid-area: auto; grid-column: 1 / -1; }
-    .plan-edit-row.three .prescription-btn { min-height: 44px; font-size: 16px; padding: 10px 14px; }
-    .plan-edit-row.three .icon-btn { min-height: 44px; min-width: 36px; display: flex; align-items: center; justify-content: center; }
     .set-cell .value { font-size: 17px; }
     .set-cell { min-height: 46px; }
     .day-row { padding: 10px; gap: 10px; grid-template-columns: 48px 1fr; }
@@ -863,10 +911,13 @@ function renderToday(iso) {
 
 function computeTodayProgress(sched, log) {
   const w = log.workout;
-  if (sched.type === 'gym' || sched.type === 'swim' || sched.type === 'run') {
-    const routine = sched.type === 'gym'  ? getGym()[sched.dayIdx]
-                  : sched.type === 'swim' ? getSwim()
-                  : getRunRoutine(sched.variant);
+  if (sched.type === 'run') {
+    // Run is logged as a whole (no per-stage tracking) → progress follows done state
+    const isDone = (w && w.status === 'done');
+    return { pct: isDone ? 100 : 0, label: isDone ? 'Session complete' : 'Session pending' };
+  }
+  if (sched.type === 'gym' || sched.type === 'swim') {
+    const routine = sched.type === 'gym' ? getGym()[sched.dayIdx] : getSwim();
     const exs = (routine && routine.blocks) ? routine.blocks.flatMap(b => b.exercises) : [];
     const total = exs.length;
     const done = w && w.completed ? Object.values(w.completed).filter(Boolean).length : 0;
@@ -919,7 +970,7 @@ function lastTypeSession(type, beforeISO) {
   Object.entries(state.logs).forEach(([iso, log]) => {
     if (iso >= beforeISO) return;
     const w = log.workout;
-    if (!w || w.type !== type) return;
+    if (!w || w.type !== type || w.status !== 'done') return;
     const f = w.fields || {};
     const hasData = Object.values(f).some(v => v);
     if (!hasData && !w.notes) return;
@@ -980,6 +1031,39 @@ function appendLastSession(container, last, iso, type) {
   container.appendChild(ls);
 }
 
+// Warm-up / prep blocks are checked off, not logged set-by-set (Mobility, Core, …)
+function isWarmupBlock(block) {
+  return /mobilit|core|warm|activation|stretch|cool[\s-]?down|prep/i.test((block && block.name) || '');
+}
+
+// Compact check-off row for warm-up exercises — tap anywhere to toggle complete
+function buildLiteExRow(ex, w, onChange) {
+  const completed = !!w.completed[ex.id];
+  const row = el('div', 'ex-lite' + (completed ? ' completed' : ''));
+
+  const cb = document.createElement('input');
+  cb.type = 'checkbox'; cb.className = 'ex-check'; cb.checked = completed; cb.tabIndex = -1;
+  row.appendChild(cb);
+
+  if (ex.prescription) row.appendChild(el('div', 'ex-lite-reps', ex.prescription.replace(/\s*×\s*/g, '×')));
+
+  const main = el('div', 'ex-lite-main');
+  main.appendChild(el('span', 'ex-lite-name', ex.name));
+  if (ex.note) main.appendChild(el('span', 'ex-lite-note', ex.note));
+  row.appendChild(main);
+
+  row.addEventListener('click', () => {
+    const nv = !w.completed[ex.id];
+    w.completed[ex.id] = nv;
+    cb.checked = nv;
+    row.classList.toggle('completed', nv);
+    saveState();
+    if (navigator.vibrate) navigator.vibrate(6);
+    onChange && onChange();
+  });
+  return row;
+}
+
 function renderRoutineExercises(container, routine, iso, log, opts) {
   opts = opts || {};
   const trackSets = opts.trackSets !== false;
@@ -995,7 +1079,9 @@ function renderRoutineExercises(container, routine, iso, log, opts) {
   routine.blocks.forEach(block => {
     const b = el('div', 'block');
     b.appendChild(el('div', 'block-title', block.name));
+    const liteBlock = trackSets && isWarmupBlock(block); // warm-up → compact check-off, no set grid
     block.exercises.forEach(ex => {
+      if (liteBlock) { b.appendChild(buildLiteExRow(ex, w, onChange)); return; }
       const completed = !!w.completed[ex.id];
       const exDiv = el('div', 'ex' + (completed ? ' completed' : ''));
 
@@ -1569,17 +1655,6 @@ function openDurationPicker(currentValue, onPick) {
   }, ([m, s]) => onPick(formatTimeMS(m, s)));
 }
 
-function openPacePicker(currentValue, onPick) {
-  const [min, sec] = parseTimeMS(currentValue);
-  openMultiWheelPicker({
-    title: 'Avg pace · per km',
-    wheels: [
-      { label: 'Min', value: min || 5, options: rangeOptions(3, 12, 1) },
-      { label: 'Sec', value: sec || 0, options: rangeOptions(0, 55, 5) }
-    ]
-  }, ([m, s]) => onPick(formatTimeMS(m, s)));
-}
-
 function openDistanceKmPicker(currentValue, onPick) {
   const [km, m] = parseDistanceKM(currentValue);
   openMultiWheelPicker({
@@ -1659,25 +1734,57 @@ function makeSetRow(s, i, timeBased, lastSet) {
 function renderRunBody(container, variant, iso, log, onChange) {
   const w = ensureWorkout(log, { type: 'run' });
   const routine = getRunRoutine(variant);
-
+  const fields = w.fields;
   const lastRun = lastTypeSession('run', iso);
+
+  // Avg pace is always derived from distance ÷ duration
+  const computePace = () => {
+    const km = parseFloat(fields.distance);
+    const durMin = parseDurationToMinutes(fields.duration);
+    fields.avgPace = (km > 0 && !isNaN(durMin) && durMin > 0) ? secondsToPace(Math.round(durMin * 60 / km)) : '';
+  };
+
+  // While the session is still open, pre-fill distance/duration from the plan
+  // target (falling back to the last run) so there's less to type.
+  if (w.status !== 'done') {
+    let changed = false;
+    if (!fields.distance && !fields.duration) {
+      fields.distance = routine.targetDistance || (lastRun && lastRun.fields.distance) || '';
+      fields.duration = routine.targetDuration || (lastRun && lastRun.fields.duration) || '';
+      changed = !!(fields.distance || fields.duration);
+    }
+    const prevPace = fields.avgPace;
+    computePace();
+    if (changed || fields.avgPace !== prevPace) saveState();
+  }
+
   if (lastRun) appendLastSession(container, lastRun, iso, 'run');
 
-  const fields = w.fields;
   const ig = el('div', 'input-grid');
+  let paceBox = null;
+  const refreshPace = () => {
+    if (!paceBox) return;
+    paceBox.textContent = fields.avgPace ? fields.avgPace + '/km' : '–';
+    paceBox.classList.toggle('empty', !fields.avgPace);
+  };
 
   ig.appendChild(pickerField('Distance',
     () => fields.distance ? fields.distance + ' km' : '',
-    (refresh) => openDistanceKmPicker(fields.distance, (v) => { fields.distance = v; saveState(); refresh(); })
+    (refresh) => openDistanceKmPicker(fields.distance, (v) => { fields.distance = v; computePace(); saveState(); refresh(); refreshPace(); })
   ));
   ig.appendChild(pickerField('Duration',
     () => fields.duration ? fields.duration : '',
-    (refresh) => openDurationPicker(fields.duration, (v) => { fields.duration = v; saveState(); refresh(); })
+    (refresh) => openDurationPicker(fields.duration, (v) => { fields.duration = v; computePace(); saveState(); refresh(); refreshPace(); })
   ));
-  ig.appendChild(pickerField('Avg pace · per km',
-    () => fields.avgPace ? fields.avgPace : '',
-    (refresh) => openPacePicker(fields.avgPace, (v) => { fields.avgPace = v; saveState(); refresh(); })
-  ));
+
+  // Avg pace — auto-calculated, read-only
+  const paceWrap = el('div');
+  paceWrap.appendChild(el('label', 'muted', 'Avg pace · auto'));
+  paceBox = el('div', 'picker-field readonly');
+  paceWrap.appendChild(paceBox);
+  ig.appendChild(paceWrap);
+  refreshPace();
+
   ig.appendChild(pickerField('RPE',
     () => fields.rpe ? String(fields.rpe) : '',
     (refresh) => openWheelPicker({ value: fields.rpe, options: rangeOptions(0, 10, 0.5), label: 'RPE (1–10)' },
@@ -1685,7 +1792,8 @@ function renderRunBody(container, variant, iso, log, onChange) {
   ));
   container.appendChild(ig);
 
-  renderRoutineExercises(container, routine, iso, log, { trackSets: false, onChange });
+  // No warm-up / main / cool-down boxes here — a run is marked done as a whole.
+  // (The structure stays in the Plan tab as reference.)
   container.appendChild(notesArea(w, 'Session notes'));
 }
 
@@ -1898,7 +2006,7 @@ function setupDayDrag(handle, draggedEl, iso) {
       const elUnder = document.elementFromPoint(e.clientX, e.clientY);
       const targetRow = elUnder ? elUnder.closest('.day-row') : null;
       document.querySelectorAll('.day-row.drag-over').forEach(r => r.classList.remove('drag-over'));
-      if (targetRow && targetRow.dataset.iso && targetRow.dataset.iso !== iso) {
+      if (targetRow && targetRow.dataset.iso && targetRow.dataset.iso !== iso && targetRow.dataset.locked !== 'true') {
         targetRow.classList.add('drag-over');
         drag.targetISO = targetRow.dataset.iso;
       } else {
@@ -1987,13 +2095,20 @@ function renderWeek() {
     const isSource = swapSourceISO === iso;
     const inSwapMode = !!swapSourceISO;
 
+    const isPast = iso < today;
+    // Done / skipped / past days are settled — their plan shouldn't be reordered
+    const locked = isPast || status === 'done' || status === 'skipped';
+
     let classes = 'day-row';
     if (iso === today) classes += ' today';
     if (status === 'done') classes += ' completed';
     if (status === 'skipped') classes += ' skipped';
+    if (isPast) classes += ' past';
+    if (locked) classes += ' locked';
     if (isSource) classes += ' swap-source';
     const row = el('div', classes);
     row.dataset.iso = iso;
+    row.dataset.locked = locked ? 'true' : 'false';
 
     // Fixed date column — stays in place during drag
     const date = el('div', 'day-date');
@@ -2019,17 +2134,37 @@ function renderWeek() {
     wo.appendChild(info);
     card.appendChild(wo);
 
-    const handle = el('div', 'drag-handle', '⋮⋮');
-    handle.title = 'Drag to swap with another day';
-    card.appendChild(handle);
+    let handle = null;
+    if (locked) {
+      const lock = el('div', 'day-lock', '🔒');
+      lock.title = status === 'done' ? 'Completed · locked from reordering'
+                 : status === 'skipped' ? 'Skipped · tap to change or log'
+                 : 'Past day · tap to change or log';
+      card.appendChild(lock);
+    } else {
+      handle = el('div', 'drag-handle', '⋮⋮');
+      handle.title = 'Drag to swap with another day';
+      card.appendChild(handle);
+    }
 
     row.appendChild(card);
 
     if (inSwapMode) {
-      // In swap mode any row tap completes the swap
-      row.addEventListener('click', () => performSwap(iso));
+      // Only editable (unlocked) days are valid swap targets
+      if (!locked) row.addEventListener('click', () => performSwap(iso));
+    } else if (locked && status === 'done') {
+      // Completed & logged — open to review (to redo it, delete the entry in History)
+      card.addEventListener('click', () => jumpToToday(iso));
+    } else if (locked) {
+      // Past / skipped but not completed — correcting it still makes sense:
+      // change the workout (e.g. to Rest) or open the day to log what happened.
+      // Only reordering (swap/drag) is disabled.
+      card.addEventListener('click', () => openWorkoutSheet(iso, {
+        onPick: (workout) => { setScheduleOverride(iso, workout); renderWeek(); },
+        onOpen: () => jumpToToday(iso)
+      }));
     } else {
-      // Tap card → wheel picker; drag handle → swap drag
+      // Editable day — tap card → wheel picker; drag handle → swap drag
       card.addEventListener('click', (e) => {
         if (e.target.closest('.drag-handle')) return;
         openWorkoutSheet(iso, {
@@ -2085,8 +2220,12 @@ function renderEditableRoutine(container, routine, onMutate) {
     const addExBtn = el('button', 'btn small', '+ exercise');
     addExBtn.addEventListener('click', () => {
       const newId = `c-${Date.now()}-${Math.random().toString(36).slice(2,5)}`;
-      block.exercises.push({ id: newId, name: 'New exercise', prescription: '3 × 8', note: '' });
-      onMutate();
+      const newEx = { id: newId, name: '', prescription: '3 × 8', note: '' };
+      block.exercises.push(newEx);
+      saveState();
+      const newRow = buildPlanExRow(block, newEx);
+      b.appendChild(newRow);                 // append in place — keeps the routine expanded
+      openExerciseEditor(block, newEx, newRow);  // open editor to name it right away
     });
     const delBlockBtn = el('button', 'icon-btn', '✕');
     delBlockBtn.title = 'Delete block';
@@ -2100,43 +2239,7 @@ function renderEditableRoutine(container, routine, onMutate) {
     bt.appendChild(btActions);
     b.appendChild(bt);
 
-    block.exercises.forEach((ex, eIdx) => {
-      const row = el('div', 'plan-edit-row three');
-      const nm = document.createElement('input');
-      nm.value = ex.name; nm.placeholder = 'Exercise name';
-      nm.addEventListener('input', () => { ex.name = nm.value; saveState(); });
-      const pr = el('button', 'prescription-btn');
-      const renderPr = () => {
-        pr.textContent = '';
-        if (ex.prescription) {
-          pr.textContent = ex.prescription;
-        } else {
-          pr.appendChild(el('span', 'empty', 'Tap to set'));
-        }
-      };
-      renderPr();
-      pr.addEventListener('click', () => {
-        openPrescriptionPicker(parsePrescription(ex.prescription), (vals) => {
-          ex.prescription = formatPrescription(vals);
-          saveState();
-          renderPr();
-        });
-      });
-      const del = el('button', 'icon-btn', '✕');
-      del.title = 'Delete exercise';
-      del.addEventListener('click', () => {
-        block.exercises.splice(eIdx, 1);
-        onMutate();
-      });
-      row.appendChild(nm); row.appendChild(pr); row.appendChild(del);
-      const noteRow = el('div', 'note-row');
-      const nt = document.createElement('textarea');
-      nt.value = ex.note || ''; nt.placeholder = 'Notes / cues (optional)';
-      nt.addEventListener('input', () => { ex.note = nt.value; saveState(); });
-      noteRow.appendChild(nt);
-      row.appendChild(noteRow);
-      b.appendChild(row);
-    });
+    block.exercises.forEach((ex) => b.appendChild(buildPlanExRow(block, ex)));
     container.appendChild(b);
   });
 
@@ -2147,6 +2250,115 @@ function renderEditableRoutine(container, routine, onMutate) {
     onMutate();
   });
   container.appendChild(addBlockBtn);
+}
+
+// One compact exercise line. Sets×reps (e.g. "2 × 10") show in the left column and
+// tap → picker; free-text targets (e.g. "15 min easy") show inline after the name.
+// Tap the name → editor sheet (rename / note / delete). No inline notes box or ✕.
+function buildPlanExRow(block, ex) {
+  const row = el('div', 'plan-ex-row');
+  const presc = (ex.prescription || '').trim();
+  // Clean "N × M" / "N × M-M-M" / "N × Ms" go in the reps column; anything with
+  // extra words (e.g. "6 × 30s hard") is treated as a free-text target instead.
+  const isSetsReps = /^\d+\s*×\s*[\d-]+s?\s*$/.test(presc);
+
+  if (isSetsReps) {
+    const reps = el('div', 'plan-ex-reps');
+    const showReps = () => { reps.textContent = (ex.prescription || '').replace(/\s*×\s*/g, '×'); };
+    showReps();
+    reps.title = 'Tap to set sets × reps';
+    reps.addEventListener('click', () => {
+      openPrescriptionPicker(parsePrescription(ex.prescription), (vals) => {
+        ex.prescription = formatPrescription(vals);
+        saveState();
+        showReps();
+      });
+    });
+    row.appendChild(reps);
+  }
+
+  const main = el('div', 'plan-ex-main');
+  main.appendChild(el('span', 'plan-ex-name', ex.name || 'Untitled'));
+  if (!isSetsReps && presc) main.appendChild(el('span', 'plan-ex-presc', presc));
+  if (ex.note) main.appendChild(el('span', 'plan-ex-note', ex.note));
+  main.title = 'Tap to rename, note, or delete';
+  main.addEventListener('click', () => openExerciseEditor(block, ex, row));
+  row.appendChild(main);
+
+  return row;
+}
+
+// Bottom-sheet editor reached by tapping an exercise name. Edits save live and
+// update the row in place (no full re-render, so the routine stays expanded).
+function openExerciseEditor(block, ex, rowEl) {
+  let backdrop = document.getElementById('sheet-backdrop');
+  if (!backdrop) { backdrop = el('div', 'sheet-backdrop'); backdrop.id = 'sheet-backdrop'; document.body.appendChild(backdrop); }
+  const existing = document.getElementById('picker-sheet');
+  if (existing) existing.remove();
+
+  const sheet = el('div', 'sheet'); sheet.id = 'picker-sheet';
+  sheet.appendChild(el('div', 'sheet-handle'));
+
+  const head = el('div', 'sheet-head');
+  const cancelBtn = el('button', 'sheet-cancel', 'Close');
+  const doneBtn = el('button', 'sheet-done', 'Done');
+  head.appendChild(cancelBtn);
+  head.appendChild(el('div', 'sheet-title', 'Edit exercise'));
+  head.appendChild(doneBtn);
+  sheet.appendChild(head);
+
+  const body = el('div', 'ex-editor');
+
+  body.appendChild(el('label', 'ex-editor-label', 'Exercise'));
+  const nameInp = document.createElement('input');
+  nameInp.className = 'ex-editor-input'; nameInp.value = ex.name || ''; nameInp.placeholder = 'Exercise name';
+  nameInp.addEventListener('input', () => {
+    ex.name = nameInp.value; saveState();
+    const ns = rowEl.querySelector('.plan-ex-name'); if (ns) ns.textContent = ex.name || 'Untitled';
+  });
+  body.appendChild(nameInp);
+
+  body.appendChild(el('label', 'ex-editor-label', 'Note / cue (optional)'));
+  const noteInp = document.createElement('input');
+  noteInp.className = 'ex-editor-input'; noteInp.value = ex.note || ''; noteInp.placeholder = 'e.g. Each side';
+  noteInp.addEventListener('input', () => {
+    ex.note = noteInp.value; saveState();
+    const main = rowEl.querySelector('.plan-ex-main');
+    let nspan = rowEl.querySelector('.plan-ex-note');
+    if (ex.note) {
+      if (!nspan) { nspan = el('span', 'plan-ex-note'); main.appendChild(nspan); }
+      nspan.textContent = ex.note;
+    } else if (nspan) { nspan.remove(); }
+  });
+  body.appendChild(noteInp);
+
+  const delBtn = el('button', 'btn small ghost danger del-ex', 'Delete exercise');
+  delBtn.addEventListener('click', () => {
+    const i = block.exercises.indexOf(ex);
+    if (i >= 0) block.exercises.splice(i, 1);
+    saveState();
+    rowEl.remove();
+    close();
+    toast('Exercise deleted');
+  });
+  body.appendChild(delBtn);
+
+  sheet.appendChild(body);
+  document.body.appendChild(sheet);
+
+  const close = () => {
+    sheet.classList.remove('open'); backdrop.classList.remove('open');
+    setTimeout(() => sheet.remove(), 280);
+  };
+  backdrop.onclick = close;
+  cancelBtn.onclick = close;
+  doneBtn.onclick = close;
+
+  requestAnimationFrame(() => {
+    backdrop.classList.add('open');
+    sheet.classList.add('open');
+    if (!ex.name) setTimeout(() => nameInp.focus(), 320); // new exercise → start typing
+  });
 }
 
 function renderRoutineBox(emoji, routine, onMutate, opts) {
@@ -2166,6 +2378,22 @@ function renderRoutineBox(emoji, routine, onMutate, opts) {
   nameInp.addEventListener('input', () => { routine.name = nameInp.value; saveState(); });
   sum.appendChild(nameInp);
   dets.appendChild(sum);
+
+  if (opts.targets) {
+    const tr = el('div', 'run-targets');
+    tr.appendChild(el('div', 'run-targets-label', 'Target · pre-fills Today'));
+    const grid = el('div', 'input-grid');
+    grid.appendChild(pickerField('Distance',
+      () => routine.targetDistance ? routine.targetDistance + ' km' : '',
+      (refresh) => openDistanceKmPicker(routine.targetDistance, (v) => { routine.targetDistance = v; saveState(); refresh(); })
+    ));
+    grid.appendChild(pickerField('Duration',
+      () => routine.targetDuration ? routine.targetDuration : '',
+      (refresh) => openDurationPicker(routine.targetDuration, (v) => { routine.targetDuration = v; saveState(); refresh(); })
+    ));
+    tr.appendChild(grid);
+    dets.appendChild(tr);
+  }
 
   renderEditableRoutine(dets, routine, onMutate);
   card.appendChild(dets);
@@ -2219,9 +2447,9 @@ function renderPlan() {
     root.appendChild(renderRoutineBox('🏋️', day, () => { saveState(); renderPlan(); }, { open: dIdx === 0 }));
   });
   // 4: Run Intervals
-  root.appendChild(renderRoutineBox('🏃', state.customRunIntervals, () => { saveState(); renderPlan(); }));
+  root.appendChild(renderRoutineBox('🏃', state.customRunIntervals, () => { saveState(); renderPlan(); }, { targets: true }));
   // 5: Run Long
-  root.appendChild(renderRoutineBox('🏃', state.customRunLong, () => { saveState(); renderPlan(); }));
+  root.appendChild(renderRoutineBox('🏃', state.customRunLong, () => { saveState(); renderPlan(); }, { targets: true }));
   // 6: Swim
   root.appendChild(renderRoutineBox('🏊', state.customSwim, () => { saveState(); renderPlan(); }));
   // 7: Yoga (simplified)
@@ -2305,9 +2533,6 @@ function entryStats(entry) {
     exs.forEach(e => (e.sets||[]).forEach(s => { const v = parseFloat(s.rpe); if (!isNaN(v)) { rs+=v; rn++; } }));
     if (rn) out.push(`RPE ${(rs/rn).toFixed(1)}`);
   } else if (w.type === 'run') {
-    const exs = w.snapshot?.exercises || [];
-    const completed = exs.filter(e => e.completed).length;
-    if (exs.length) out.push(`${completed}/${exs.length} segments`);
     const f = w.fields || {};
     if (f.distance) out.push(`${f.distance} km`);
     if (f.duration) out.push(`${f.duration}`);
@@ -2327,6 +2552,305 @@ function entryStats(entry) {
     if (f.rpe)      out.push(`Felt ${f.rpe}`);
   }
   return out;
+}
+
+// ============================================================
+//  PROGRESS CHARTS (run + swim)
+// ============================================================
+
+const WEEK_BARS   = 12;        // weekly buckets in 'week' timeframe
+const MONTH_BARS  = 6;         // monthly buckets in 'month' timeframe
+const RUN_COLOR   = '#60a5fa'; // running volume + intervals dots
+const LONG_COLOR  = '#fbbf24'; // long-run dots
+const SWIM_COLOR  = '#22d3ee'; // swimming volume
+let runChartMetric = 'distance'; // 'distance' | 'pace' (session-only)
+let chartTimeframe = 'week';     // 'week' | 'month' (session-only)
+
+function doneWorkoutsOfType(type) {
+  const arr = [];
+  Object.entries(state.logs).forEach(([iso, log]) => {
+    const w = log && log.workout;
+    if (!w || w.status !== 'done') return;
+    const t = (w.snapshot && w.snapshot.workoutType) || w.type;
+    if (t === type) arr.push({ iso, w });
+  });
+  arr.sort((a, b) => a.iso.localeCompare(b.iso)); // oldest → newest
+  return arr;
+}
+
+function paceToSeconds(s) {
+  if (!s || typeof s !== 'string' || !s.includes(':')) return 0;
+  const [m, sec] = s.split(':').map(n => parseInt(n, 10) || 0);
+  return m * 60 + sec;
+}
+function secondsToPace(sec) {
+  const m = Math.floor(sec / 60), s = Math.round(sec % 60);
+  return m + ':' + String(s).padStart(2, '0');
+}
+function fmtMeters(m) {
+  if (m >= 1000) return (m / 1000).toFixed(m % 1000 === 0 ? 0 : 1) + ' km';
+  return Math.round(m) + ' m';
+}
+function monthShort(iso) {
+  return new Date(iso + 'T12:00:00').toLocaleDateString(undefined, { month: 'short' });
+}
+
+// Time buckets for the active timeframe (oldest first). Each: {startISO, endISO, sum, mode}
+function recentBuckets() {
+  return chartTimeframe === 'month' ? recentMonthBuckets() : recentWeekBuckets();
+}
+function recentWeekBuckets() {
+  const monday = startOfWeekISO(todayISO());
+  const out = [];
+  for (let i = WEEK_BARS - 1; i >= 0; i--) {
+    const s = addDaysISO(monday, -7 * i);
+    out.push({ startISO: s, endISO: addDaysISO(s, 7), sum: 0, mode: 'week' });
+  }
+  return out;
+}
+function recentMonthBuckets() {
+  const base = new Date(todayISO() + 'T12:00:00');
+  const out = [];
+  for (let i = MONTH_BARS - 1; i >= 0; i--) {
+    const s = new Date(base.getFullYear(), base.getMonth() - i, 1, 12);
+    const e = new Date(base.getFullYear(), base.getMonth() - i + 1, 1, 12);
+    out.push({ startISO: toISO(s), endISO: toISO(e), sum: 0, mode: 'month' });
+  }
+  return out;
+}
+function addToBuckets(buckets, iso, value) {
+  if (isNaN(value)) return;
+  for (const b of buckets) {
+    if (iso >= b.startISO && iso < b.endISO) { b.sum += value; return; }
+  }
+}
+function timeframeLabel() {
+  return chartTimeframe === 'month' ? `last ${MONTH_BARS} months` : `last ${WEEK_BARS} weeks`;
+}
+function chartWindowStartISO() {
+  return recentBuckets()[0].startISO;
+}
+
+// Weekly volume bar chart → SVG element
+function buildBarChart(buckets, color, fmtVal) {
+  const W = 320, H = 150, padL = 8, padR = 8, padT = 16, padB = 22;
+  const plotW = W - padL - padR, plotH = H - padT - padB, n = buckets.length;
+  const max = Math.max(0, ...buckets.map(b => b.sum));
+  const gap = 4, barW = (plotW - gap * (n - 1)) / n;
+  const parts = [`<svg class="chart-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">`];
+  parts.push(`<line class="grid-line" x1="${padL}" y1="${padT + plotH}" x2="${W - padR}" y2="${padT + plotH}"/>`);
+  buckets.forEach((b, i) => {
+    const x = padL + i * (barW + gap);
+    if (b.sum > 0) {
+      const h = (b.sum / max) * plotH, y = padT + plotH - h;
+      parts.push(`<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barW.toFixed(1)}" height="${h.toFixed(1)}" rx="3" fill="${color}"/>`);
+    } else {
+      parts.push(`<rect class="bar-empty" x="${x.toFixed(1)}" y="${(padT + plotH - 3).toFixed(1)}" width="${barW.toFixed(1)}" height="3" rx="1.5"/>`);
+    }
+    if (n <= 6 || i === 0 || i === n - 1 || i % 3 === 0) {
+      const d = new Date(b.startISO + 'T12:00:00');
+      const opts = b.mode === 'month' ? { month: 'short' } : { day: 'numeric', month: 'short' };
+      parts.push(`<text class="axis-label" x="${(x + barW / 2).toFixed(1)}" y="${H - 8}" text-anchor="middle">${d.toLocaleDateString(undefined, opts)}</text>`);
+    }
+  });
+  if (max > 0) parts.push(`<text class="axis-label" x="${W - padR}" y="${padT - 4}" text-anchor="end">max ${fmtVal(max)}</text>`);
+  parts.push('</svg>');
+  const wrap = el('div');
+  wrap.innerHTML = parts.join('');
+  return wrap.firstChild;
+}
+
+// Pace scatter (one dot per run, colored by variant) → SVG element
+function buildPaceScatter(runs) {
+  const startISO = chartWindowStartISO();
+  const pts = runs.map(e => {
+    const f = e.w.fields || {};
+    let sec = paceToSeconds(f.avgPace);
+    if (!sec) {
+      const km = parseFloat(f.distance), durMin = parseDurationToMinutes(f.duration);
+      if (km > 0 && !isNaN(durMin) && durMin > 0) sec = Math.round(durMin * 60 / km);
+    }
+    const label = (e.w.snapshot && e.w.snapshot.workoutLabel) || '';
+    return { iso: e.iso, sec, variant: /long/i.test(label) ? 'long' : 'intervals' };
+  }).filter(p => p.sec > 0 && p.iso >= startISO);
+
+  if (!pts.length) {
+    const wrap = el('div');
+    wrap.appendChild(el('div', 'chart-empty', 'No pace recorded yet — add pace when you log a run.'));
+    return wrap;
+  }
+
+  const W = 320, H = 150, padL = 36, padR = 8, padT = 12, padB = 22;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+  const startMs = new Date(startISO + 'T12:00:00').getTime();
+  const spanMs = Math.max(1, new Date(todayISO() + 'T12:00:00').getTime() - startMs);
+  const secs = pts.map(p => p.sec);
+  let minSec = Math.min(...secs), maxSec = Math.max(...secs);
+  if (minSec === maxSec) { minSec -= 15; maxSec += 15; }
+  const range = maxSec - minSec;
+  const yFor = sec => padT + ((sec - minSec) / range) * plotH; // faster (lower sec) → higher
+  const xFor = iso => padL + Math.max(0, Math.min(1, (new Date(iso + 'T12:00:00').getTime() - startMs) / spanMs)) * plotW;
+
+  const parts = [`<svg class="chart-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">`];
+  [minSec, (minSec + maxSec) / 2, maxSec].forEach(sv => {
+    const y = yFor(sv);
+    parts.push(`<line class="grid-line" x1="${padL}" y1="${y.toFixed(1)}" x2="${W - padR}" y2="${y.toFixed(1)}"/>`);
+    parts.push(`<text class="axis-label" x="${padL - 5}" y="${(y + 3).toFixed(1)}" text-anchor="end">${secondsToPace(Math.round(sv))}</text>`);
+  });
+  parts.push(`<text class="axis-label" x="${padL}" y="${H - 8}" text-anchor="start">${monthShort(startISO)}</text>`);
+  parts.push(`<text class="axis-label" x="${W - padR}" y="${H - 8}" text-anchor="end">now</text>`);
+  pts.forEach(p => {
+    const col = p.variant === 'long' ? LONG_COLOR : RUN_COLOR;
+    parts.push(`<circle class="dot-pt" cx="${xFor(p.iso).toFixed(1)}" cy="${yFor(p.sec).toFixed(1)}" r="4.5" fill="${col}"/>`);
+  });
+  parts.push('</svg>');
+  const wrap = el('div');
+  wrap.innerHTML = parts.join('');
+  return wrap.firstChild;
+}
+
+function renderRunChartCard(root) {
+  const runs = doneWorkoutsOfType('run');
+  if (!runs.length) return;
+
+  const card = el('div', 'chart-card');
+  const head = el('div', 'chart-head');
+  const title = el('div', 'chart-title');
+  title.innerHTML = `<span class="dot" style="background:${RUN_COLOR}"></span>Running`;
+  head.appendChild(title);
+
+  const toggle = el('div', 'chart-toggle');
+  const bDist = el('button', null, 'Distance');
+  const bPace = el('button', null, 'Pace');
+  toggle.appendChild(bDist); toggle.appendChild(bPace);
+  head.appendChild(toggle);
+  card.appendChild(head);
+
+  const sub = el('div', 'chart-sub');
+  card.appendChild(sub);
+  const body = el('div');
+  card.appendChild(body);
+
+  function draw() {
+    bDist.className = runChartMetric === 'distance' ? 'active' : '';
+    bPace.className = runChartMetric === 'pace' ? 'active' : '';
+    body.innerHTML = '';
+    if (runChartMetric === 'distance') {
+      const buckets = recentBuckets();
+      runs.forEach(e => addToBuckets(buckets, e.iso, parseFloat((e.w.fields || {}).distance)));
+      const total = buckets.reduce((n, b) => n + b.sum, 0);
+      sub.textContent = `${total.toFixed(1)} km total · ${timeframeLabel()}`;
+      body.appendChild(buildBarChart(buckets, RUN_COLOR, v => v.toFixed(1) + ' km'));
+    } else {
+      sub.textContent = 'Each dot is one run · higher = faster';
+      body.appendChild(buildPaceScatter(runs));
+      const legend = el('div', 'chart-legend');
+      legend.innerHTML = `<span><i style="background:${RUN_COLOR}"></i>Intervals</span>` +
+                         `<span><i style="background:${LONG_COLOR}"></i>Long</span>`;
+      body.appendChild(legend);
+    }
+  }
+  bDist.addEventListener('click', () => { runChartMetric = 'distance'; draw(); });
+  bPace.addEventListener('click', () => { runChartMetric = 'pace'; draw(); });
+  draw();
+  root.appendChild(card);
+}
+
+function renderSwimChartCard(root) {
+  const swims = doneWorkoutsOfType('swim');
+  if (!swims.length) return;
+
+  const card = el('div', 'chart-card');
+  const head = el('div', 'chart-head');
+  const title = el('div', 'chart-title');
+  title.innerHTML = `<span class="dot" style="background:${SWIM_COLOR}"></span>Swimming`;
+  head.appendChild(title);
+  card.appendChild(head);
+
+  const sub = el('div', 'chart-sub');
+  card.appendChild(sub);
+
+  const buckets = recentBuckets();
+  swims.forEach(e => addToBuckets(buckets, e.iso, parseFloat((e.w.fields || {}).distance)));
+  const totalM = buckets.reduce((n, b) => n + b.sum, 0);
+  sub.textContent = `${fmtMeters(totalM)} total · ${timeframeLabel()}`;
+  card.appendChild(buildBarChart(buckets, SWIM_COLOR, fmtMeters));
+  root.appendChild(card);
+}
+
+// Week / Month switch shared by the trend charts; full re-render keeps both
+// charts (and their Distance/Pace state) in sync.
+function renderTimeframeToggle(root) {
+  const row = el('div', 'timeframe-row');
+  const seg = el('div', 'chart-toggle');
+  const bW = el('button', chartTimeframe === 'week' ? 'active' : '', 'Weekly');
+  const bM = el('button', chartTimeframe === 'month' ? 'active' : '', 'Monthly');
+  bW.addEventListener('click', () => { if (chartTimeframe !== 'week')  { chartTimeframe = 'week';  renderHistory(); } });
+  bM.addEventListener('click', () => { if (chartTimeframe !== 'month') { chartTimeframe = 'month'; renderHistory(); } });
+  seg.appendChild(bW); seg.appendChild(bM);
+  row.appendChild(seg);
+  root.appendChild(row);
+}
+
+// ============================================================
+//  BACKUP (export / import) — keeps data safe across devices
+// ============================================================
+
+async function exportBackup() {
+  const { viewISO, ...persist } = state;
+  const json = JSON.stringify(persist, null, 2);
+  const fname = `training-backup-${todayISO()}.json`;
+  const file = new File([json], fname, { type: 'application/json' });
+  // iOS / PWA: share sheet → Files, Mail, WhatsApp, etc.
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    try { await navigator.share({ files: [file], title: 'Training backup' }); return; }
+    catch (e) { if (e && e.name === 'AbortError') return; }
+  }
+  // Desktop / fallback: plain download
+  const url = URL.createObjectURL(file);
+  const a = el('a'); a.href = url; a.download = fname;
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+  toast('Backup saved');
+}
+
+function importBackup(file) {
+  const reader = new FileReader();
+  reader.onload = () => {
+    let data;
+    try { data = JSON.parse(reader.result); } catch (e) { toast('Could not read that file'); return; }
+    if (!data || typeof data.logs !== 'object' || data.logs === null) { toast('Not a valid backup file'); return; }
+    const days = Object.keys(data.logs).length;
+    if (!confirm(`Import this backup?\n\n${days} saved day${days === 1 ? '' : 's'} will be merged in. Your existing days are kept (nothing is overwritten).`)) return;
+    let added = 0;
+    Object.entries(data.logs).forEach(([iso, log]) => {
+      if (!state.logs[iso]) { state.logs[iso] = log; added++; }
+    });
+    ['customGym', 'customRunIntervals', 'customRunLong', 'customSwim', 'customYoga'].forEach(k => {
+      if (data[k] && !state[k]) state[k] = data[k];
+    });
+    if (data.scheduleOverrides) state.scheduleOverrides = Object.assign({}, data.scheduleOverrides, state.scheduleOverrides);
+    saveState();
+    renderHistory();
+    toast(`Imported — ${added} new day${added === 1 ? '' : 's'} added`);
+  };
+  reader.readAsText(file);
+}
+
+function renderBackupCard(root) {
+  const card = el('div', 'card');
+  card.appendChild(el('h2', null, 'Backup'));
+  card.appendChild(el('div', 'muted', 'Your history lives only on this device. Export a copy now and then — especially before clearing Safari, or to move it to a new phone.'));
+  const row = el('div', 'backup-row');
+  const exp = el('button', 'btn primary', 'Export backup');
+  exp.addEventListener('click', exportBackup);
+  const imp = el('button', 'btn', 'Import backup');
+  const input = el('input'); input.type = 'file'; input.accept = 'application/json,.json'; input.style.display = 'none';
+  input.addEventListener('change', () => { if (input.files[0]) importBackup(input.files[0]); input.value = ''; });
+  imp.addEventListener('click', () => input.click());
+  row.appendChild(exp); row.appendChild(imp); row.appendChild(input);
+  card.appendChild(row);
+  root.appendChild(card);
 }
 
 // ============================================================
@@ -2394,41 +2918,15 @@ function renderHistory() {
   renderWeeklySummary(root);
 
   const entries = allEntries();
+  const hasTrends = doneWorkoutsOfType('run').length || doneWorkoutsOfType('swim').length;
 
-  const head = el('div', 'card');
-  head.appendChild(el('h2', null, 'History'));
-  head.appendChild(el('div', 'muted', `${entries.length} completed ${entries.length === 1 ? 'entry' : 'entries'}`));
+  // Trend charts with a shared Weekly/Monthly switch (each self-skips if no data)
+  if (hasTrends) renderTimeframeToggle(root);
+  renderRunChartCard(root);
+  renderSwimChartCard(root);
 
-  // simple summary stats — prefer snapshot.workoutType when available
-  if (entries.length) {
-    const totals = entries.reduce((acc, e) => {
-      const w = e.log.workout;
-      const type = (w.snapshot && w.snapshot.workoutType) || w.type;
-      acc.byType[type] = (acc.byType[type] || 0) + 1;
-      if (type === 'run') {
-        const k = parseFloat(w.fields?.distance); if (!isNaN(k)) acc.runKm += k;
-        const m = parseDurationToMinutes(w.fields?.duration); if (!isNaN(m)) acc.runMin += m;
-      }
-      return acc;
-    }, { byType: {}, runKm: 0, runMin: 0 });
-    const sg = el('div', 'cardio-block'); sg.style.marginTop = '10px';
-    const cells = [
-      ['Total', String(entries.length)],
-      ['Gym', String(totals.byType.gym || 0)],
-      ['Run', String(totals.byType.run || 0)],
-      ['Swim', String(totals.byType.swim || 0)],
-      ['Yoga', String(totals.byType.yoga || 0)],
-      ['Run km total', totals.runKm ? totals.runKm.toFixed(1) : '—']
-    ];
-    cells.forEach(([l, v]) => {
-      const c = el('div', 'cardio-cell');
-      c.appendChild(el('div', 'label', l));
-      c.appendChild(el('div', 'value', v));
-      sg.appendChild(c);
-    });
-    head.appendChild(sg);
-  }
-  root.appendChild(head);
+  // Backup utility — kept above the log so the log stays at the bottom
+  renderBackupCard(root);
 
   // Entries list
   if (!entries.length) {
