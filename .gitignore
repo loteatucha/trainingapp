@@ -4,3 +4,7 @@
 node_modules/
 *.log
 .claude/
+
+# Secrets — never commit Whoop client_secret / refresh tokens
+.secrets.json
+*.secret.json

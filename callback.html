@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Authorization — Training App</title>
+<style>
+  :root { color-scheme: dark; }
+  body {
+    margin: 0; padding: 28px 18px; min-height: 100vh; box-sizing: border-box;
+    background: #0a0e1a; color: #e6ebf5;
+    font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    max-width: 560px; margin-inline: auto;
+    display: flex; flex-direction: column; justify-content: center;
+  }
+  h1 { font-size: 22px; margin: 0 0 6px; }
+  .muted { color: #8a93a8; font-size: 14px; }
+  .card { background: #111626; border: 1px solid #1f2740; border-radius: 14px; padding: 18px; margin-top: 18px; }
+  .ok { color: #5fd38b; } .err { color: #ff6f7d; }
+  code, .code {
+    display: block; background: #0c1120; border: 1px solid #243056; border-radius: 10px;
+    padding: 12px 14px; margin-top: 10px; font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
+    word-break: break-all; color: #cdd9ff;
+  }
+  button {
+    margin-top: 14px; width: 100%; padding: 13px; border: 0; border-radius: 12px;
+    background: #3658d6; color: #fff; font-size: 16px; font-weight: 600;
+  }
+  button:active { background: #2c49b3; }
+  a { color: #6f9bff; }
+</style>
+</head>
+<body>
+  <h1 id="title">Finishing authorization…</h1>
+  <p class="muted" id="subtitle">Reading the response from WHOOP.</p>
+  <div class="card" id="panel" style="display:none">
+    <div class="muted" id="panelLabel">Authorization code</div>
+    <div class="code" id="codeBox"></div>
+    <button id="copyBtn">Copy code</button>
+    <p class="muted" id="hint" style="margin-bottom:0">
+      Paste this code back to Claude to complete the one-time WHOOP connection.
+      It expires within a few minutes, so do it now.
+    </p>
+  </div>
+  <p class="muted" style="margin-top:24px"><a href="./">← Back to the app</a></p>
+
+<script>
+  const params = new URLSearchParams(location.search);
+  const code  = params.get('code');
+  const error = params.get('error');
+  const errDesc = params.get('error_description');
+  const state = params.get('state');
+
+  const title = document.getElementById('title');
+  const subtitle = document.getElementById('subtitle');
+  const panel = document.getElementById('panel');
+  const codeBox = document.getElementById('codeBox');
+  const copyBtn = document.getElementById('copyBtn');
+
+  if (error) {
+    title.textContent = 'Authorization failed';
+    title.className = 'err';
+    subtitle.textContent = errDesc || error;
+  } else if (code) {
+    title.textContent = 'Authorized ✓';
+    title.className = 'ok';
+    subtitle.textContent = 'Copy the code below and paste it back to Claude.';
+    codeBox.textContent = code;
+    panel.style.display = '';
+    copyBtn.addEventListener('click', async () => {
+      try { await navigator.clipboard.writeText(code); copyBtn.textContent = 'Copied ✓'; }
+      catch (e) {
+        const r = document.createRange(); r.selectNode(codeBox);
+        const s = getSelection(); s.removeAllRanges(); s.addRange(r);
+        copyBtn.textContent = 'Selected — long-press to copy';
+      }
+    });
+    if (state) {
+      const s = document.createElement('p');
+      s.className = 'muted'; s.style.marginTop = '8px';
+      s.textContent = 'state: ' + state;
+      panel.appendChild(s);
+    }
+  } else {
+    title.textContent = 'Nothing to do here';
+    subtitle.textContent = 'Open this page only as the WHOOP OAuth redirect target.';
+  }
+</script>
+</body>
+</html>

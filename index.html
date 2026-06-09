@@ -421,6 +421,14 @@
   .entry-del { opacity: 0.4; }
   .entry-row:hover .entry-del { opacity: 1; }
 
+  /* Connected data (Strava / WHOOP sync) */
+  .connected-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .connected-row { display: flex; align-items: center; gap: 8px; padding: 8px 0 2px; flex-wrap: wrap; }
+  .recovery-grid { display: flex; gap: 18px; padding: 8px 0 4px; flex-wrap: wrap; }
+  .recovery-stat { display: flex; flex-direction: column; gap: 3px; }
+  .recovery-num { font-size: 22px; font-weight: 700; color: var(--ink); line-height: 1; }
+  .recovery-lbl { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+
   .footer { text-align: center; color: var(--muted); font-size: 11px; margin-top: 16px; }
   .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--accent-strong); color: #fff;
     padding: 12px 20px; border-radius: 999px; font-size: 13px; font-weight: 600; box-shadow: 0 8px 24px rgba(0,0,0,.4); opacity: 0;
@@ -2916,6 +2924,7 @@ function renderHistory() {
   root.innerHTML = '';
 
   renderWeeklySummary(root);
+  renderConnectedCard(root);
 
   const entries = allEntries();
   const hasTrends = doneWorkoutsOfType('run').length || doneWorkoutsOfType('swim').length;
@@ -3013,10 +3022,122 @@ function toast(msg) {
 }
 
 // ============================================================
+//  CONNECTED DATA  (Strava / WHOOP sync from data.json)
+// ============================================================
+
+function fmtClock(sec) {
+  sec = Math.round(sec || 0);
+  const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), s = sec % 60;
+  if (h) return h + ':' + String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+  return m + ':' + String(s).padStart(2, '0');
+}
+function stravaShort(sport) {
+  return ({ Run: 'RUN', TrailRun: 'RUN', Swim: 'SWIM', WeightTraining: 'GYM', Workout: 'GYM',
+            Ride: 'RIDE', VirtualRide: 'RIDE', Walk: 'WALK', Hike: 'HIKE', Yoga: 'YOGA' })[sport]
+         || (sport || '').replace(/([a-z])([A-Z])/g, '$1 $2').toUpperCase().slice(0, 6);
+}
+function stravaPace(sport, mps) {
+  if (!mps || mps <= 0) return null;
+  if (sport === 'Run' || sport === 'TrailRun') return secondsToPace(Math.round(1000 / mps)) + ' /km';
+  if (sport === 'Swim') return secondsToPace(Math.round(100 / mps)) + ' /100m';
+  return null;
+}
+function stravaStats(a) {
+  const out = [];
+  if (a.distance_m > 0) out.push(fmtMeters(a.distance_m));
+  if (a.moving_time_s) out.push(fmtClock(a.moving_time_s));
+  const pace = stravaPace(a.sport_type, a.avg_speed_mps);
+  if (pace) out.push(pace);
+  if (a.calories) out.push(a.calories + ' kcal');
+  if (a.relative_effort) out.push('effort ' + a.relative_effort);
+  if (a.pr_count) out.push('🏅 ' + a.pr_count);
+  return out;
+}
+function stravaRow(a) {
+  const row = el('div', 'entry-row'); row.style.cursor = 'default';
+  const d = new Date(a.start_local);
+  const lhs = el('div', 'entry-lhs');
+  lhs.appendChild(el('div', 'entry-date', isNaN(d) ? a.date : d.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric' })));
+  lhs.appendChild(el('div', 'entry-type-pill', stravaShort(a.sport_type)));
+  row.appendChild(lhs);
+  const mid = el('div', 'entry-mid');
+  mid.appendChild(el('div', 'entry-title', a.name));
+  const stats = stravaStats(a);
+  if (stats.length) mid.appendChild(el('div', 'entry-stats', stats.join(' · ')));
+  row.appendChild(mid);
+  const rhs = el('div', 'entry-rhs');
+  if (!isNaN(d)) rhs.appendChild(el('div', 'entry-time', d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })));
+  row.appendChild(rhs);
+  return row;
+}
+function renderRecovery(card, whoop) {
+  const recovery = (whoop.recovery || []).slice().sort((a, b) => a.date.localeCompare(b.date));
+  const sleep    = (whoop.sleep    || []).slice().sort((a, b) => a.date.localeCompare(b.date));
+  const latest = recovery[recovery.length - 1];
+  if (!latest) return false;
+  const grid = el('div', 'recovery-grid');
+  const stat = (num, lbl) => {
+    const s = el('div', 'recovery-stat');
+    s.appendChild(el('div', 'recovery-num', num));
+    s.appendChild(el('div', 'recovery-lbl', lbl));
+    grid.appendChild(s);
+  };
+  if (latest.recovery_score != null) stat(latest.recovery_score + '%', 'Recovery');
+  if (latest.hrv_rmssd_ms  != null)  stat(Math.round(latest.hrv_rmssd_ms), 'HRV ms');
+  if (latest.resting_hr    != null)  stat(latest.resting_hr, 'RHR');
+  const latestSleep = sleep[sleep.length - 1];
+  if (latestSleep && latestSleep.sleep_performance_pct != null) stat(latestSleep.sleep_performance_pct + '%', 'Sleep');
+  card.appendChild(grid);
+  return true;
+}
+function renderConnectedCard(root) {
+  const sync = state.sync;
+  if (!sync) return; // data.json not loaded yet (or unavailable)
+  const card = el('div', 'card');
+
+  const head = el('div', 'connected-head');
+  head.appendChild(el('h2', null, 'Connected'));
+  const d = sync.syncedAt ? new Date(sync.syncedAt) : null;
+  if (d && !isNaN(d)) head.appendChild(el('div', 'muted',
+    'Synced ' + d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) +
+    ' · ' + d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })));
+  card.appendChild(head);
+
+  // WHOOP — recovery if connected, otherwise a gentle hint
+  const whoop = sync.whoop || {};
+  const shown = whoop.connected ? renderRecovery(card, whoop) : false;
+  if (!shown) {
+    const row = el('div', 'connected-row');
+    row.appendChild(el('span', 'pill warn', 'WHOOP'));
+    row.appendChild(el('span', 'muted', 'Not connected yet — finish app setup to see recovery & sleep here.'));
+    card.appendChild(row);
+  }
+
+  // STRAVA — most recent activities
+  const acts = (sync.strava && sync.strava.activities) || [];
+  if (acts.length) {
+    card.appendChild(el('h3', null, 'Recent activity · Strava'));
+    acts.slice(0, 8).forEach(a => card.appendChild(stravaRow(a)));
+  }
+
+  root.appendChild(card);
+}
+async function loadSyncData() {
+  try {
+    const res = await fetch('./data.json', { cache: 'no-store' });
+    if (!res.ok) return;
+    state.sync = await res.json();
+    const hist = document.getElementById('tab-history');
+    if (hist && hist.style.display !== 'none') renderHistory();
+  } catch (e) { /* offline or no synced data yet — ignore */ }
+}
+
+// ============================================================
 //  INIT
 // ============================================================
 state.viewISO = todayISO();
 renderToday();
+loadSyncData();
 
 // Register service worker for offline support
 if ('serviceWorker' in navigator) {
