@@ -65,7 +65,7 @@
   .row { display: flex; align-items: center; gap: 8px; }
   .row + .row { margin-top: 6px; }
   .muted { color: var(--muted); font-size: 13px; }
-  .pill { display: inline-block; padding: 3px 9px; border-radius: 999px; font-size: 11px;
+  .pill { display: inline-block; padding: 3px 9px; border-radius: 999px; font-size: 11px; white-space: nowrap;
     background: var(--accent-soft); color: var(--accent); font-weight: 600; letter-spacing: 0.02em; }
   .pill.warn { background: rgba(251, 191, 36, 0.18); color: var(--warn); }
   .pill.skip { background: rgba(248, 113, 113, 0.18); color: var(--skip); }
@@ -429,6 +429,31 @@
   .recovery-num { font-size: 22px; font-weight: 700; color: var(--ink); line-height: 1; }
   .recovery-lbl { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
 
+  /* Coach Plan tab */
+  .coach-now { font-size: 13px; font-weight: 600; color: var(--accent); margin: 6px 0 4px; }
+  .disc-row { display: flex; gap: 12px; padding: 10px 0; border-top: 1px solid var(--border); }
+  .disc-row:first-of-type { border-top: 0; }
+  .disc-emoji { font-size: 22px; line-height: 1.2; }
+  .disc-mid { min-width: 0; }
+  .disc-title { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 14px; font-weight: 600; color: var(--ink); margin-bottom: 3px; }
+  .coach-week { border: 1px solid var(--border); border-radius: 12px; padding: 12px; margin-top: 10px; background: var(--surface-2); }
+  .coach-week.current { border-color: var(--accent); background: var(--accent-soft); }
+  .coach-week-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; row-gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+  .coach-week-when { display: flex; align-items: baseline; gap: 8px; white-space: nowrap; }
+  .coach-week-no { font-size: 14px; font-weight: 700; color: var(--ink); }
+  .coach-week-pills { display: flex; gap: 6px; align-items: center; }
+  .coach-disc { display: flex; gap: 10px; padding: 4px 0; }
+  .coach-disc-emoji { font-size: 16px; width: 22px; text-align: center; flex-shrink: 0; }
+  .coach-disc-lines { min-width: 0; }
+  .coach-disc-line { font-size: 13px; color: var(--ink); line-height: 1.4; }
+  .coach-disc-line + .coach-disc-line { color: var(--muted); }
+  .coach-week-note { font-size: 12px; color: var(--muted); font-style: italic; margin-top: 8px; }
+  .rx-row { display: flex; gap: 10px; padding: 8px 0; border-top: 1px solid var(--border); align-items: flex-start; }
+  .rx-row:first-of-type { border-top: 0; }
+  .rx-text { font-size: 13px; color: var(--ink); line-height: 1.45; }
+  .pill.now { background: var(--accent); color: #fff; }
+  .coach-source { margin-top: 14px; text-align: center; }
+
   .footer { text-align: center; color: var(--muted); font-size: 11px; margin-top: 16px; }
   .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--accent-strong); color: #fff;
     padding: 12px 20px; border-radius: 999px; font-size: 13px; font-weight: 600; box-shadow: 0 8px 24px rgba(0,0,0,.4); opacity: 0;
@@ -486,12 +511,14 @@
   <div class="tab" data-tab="week">Week</div>
   <div class="tab" data-tab="history">History</div>
   <div class="tab" data-tab="plan">Plan</div>
+  <div class="tab" data-tab="coach">Coach</div>
 </div>
 
 <div id="tab-today"></div>
 <div id="tab-week" style="display:none"></div>
 <div id="tab-history" style="display:none"></div>
 <div id="tab-plan" style="display:none"></div>
+<div id="tab-coach" style="display:none"></div>
 
 <div class="footer">v2 · iterate with Claude · saved locally</div>
 <div class="toast" id="toast"></div>
@@ -815,10 +842,12 @@ document.querySelectorAll('.tab').forEach(t => {
     document.getElementById('tab-week').style.display    = tab === 'week'    ? '' : 'none';
     document.getElementById('tab-history').style.display = tab === 'history' ? '' : 'none';
     document.getElementById('tab-plan').style.display    = tab === 'plan'    ? '' : 'none';
+    document.getElementById('tab-coach').style.display   = tab === 'coach'   ? '' : 'none';
     if (tab === 'today')   renderToday(state.viewISO);
     if (tab === 'week')    renderWeek();
     if (tab === 'history') renderHistory();
     if (tab === 'plan')    renderPlan();
+    if (tab === 'coach')   renderCoachPlan();
   });
 });
 
@@ -3133,11 +3162,151 @@ async function loadSyncData() {
 }
 
 // ============================================================
+//  COACH PLAN  (read-only training plan from plan.json)
+// ============================================================
+
+const DISC_ORDER = ['run', 'swim', 'bike'];
+
+function planDiscEmoji(key) {
+  return ({ run: '🏃', swim: '🏊', bike: '🚴', gym: '🏋️', strength: '🏋️', yoga: '🧘' })[key] || '•';
+}
+function planTagClass(tag) {
+  tag = (tag || '').toUpperCase();
+  if (tag.includes('PRIORITY') || tag.includes('CRITICAL') || tag.includes('START')) return 'skip';
+  if (tag.includes('MAINTAIN')) return 'done';
+  return 'warn';
+}
+function phaseClass(phase) {
+  phase = (phase || '').toUpperCase();
+  if (phase === 'RECOVER') return 'done';
+  if (phase === 'BUILD') return 'warn';
+  if (phase === 'CHECKPOINT') return 'skip';
+  return ''; // FOUNDATION → default accent pill
+}
+function fmtPlanRange(start, end) {
+  const o = { month: 'short', day: 'numeric' };
+  const s = new Date(start + 'T12:00:00'), e = new Date(end + 'T12:00:00');
+  return s.toLocaleDateString(undefined, o) + ' – ' + e.toLocaleDateString(undefined, o);
+}
+function planWeekStatus(plan) {
+  const today = todayISO();
+  const weeks = plan.weeksPlan || [];
+  if (!weeks.length) return { idx: -1, state: 'none' };
+  if (today < weeks[0].start) return { idx: -1, state: 'upcoming' };
+  if (today > weeks[weeks.length - 1].end) return { idx: -1, state: 'done' };
+  const idx = weeks.findIndex(w => today >= w.start && today <= w.end);
+  return { idx, state: idx >= 0 ? 'active' : 'between' };
+}
+
+function renderCoachPlan() {
+  const root = document.getElementById('tab-coach');
+  root.innerHTML = '';
+  const plan = state.plan;
+  if (!plan) {
+    const c = el('div', 'card');
+    c.appendChild(el('div', 'muted', 'No coach plan synced yet. Ask Claude to "sync my plan" to pull it from your dashboard artifact.'));
+    root.appendChild(c);
+    return;
+  }
+  const status = planWeekStatus(plan);
+
+  // Header
+  const head = el('div', 'card');
+  const top = el('div', 'connected-head');
+  top.appendChild(el('h2', null, plan.title || 'Coach Plan'));
+  if (plan.focus) top.appendChild(el('span', 'pill', plan.focus));
+  head.appendChild(top);
+  const cur = status.idx >= 0 ? plan.weeksPlan[status.idx] : null;
+  if (cur) head.appendChild(el('div', 'coach-now', `Week ${cur.week} of ${plan.weeks} · ${fmtPlanRange(cur.start, cur.end)} · ${cur.phase}`));
+  else if (status.state === 'upcoming') head.appendChild(el('div', 'coach-now', `Starts ${fmtPlanRange(plan.startDate, plan.endDate)}`));
+  else if (status.state === 'done') head.appendChild(el('div', 'coach-now', 'Plan complete — time to set the next block.'));
+  if (plan.summary) head.appendChild(el('div', 'muted', plan.summary));
+  root.appendChild(head);
+
+  // The three disciplines (now → goal)
+  if (plan.disciplines && plan.disciplines.length) {
+    const dc = el('div', 'card');
+    dc.appendChild(el('h3', null, 'The three disciplines'));
+    plan.disciplines.forEach(d => {
+      const row = el('div', 'disc-row');
+      row.appendChild(el('div', 'disc-emoji', d.emoji || planDiscEmoji(d.key)));
+      const mid = el('div', 'disc-mid');
+      const t = el('div', 'disc-title');
+      t.appendChild(el('span', null, d.label + ' · ' + d.freq));
+      if (d.tag) t.appendChild(el('span', 'pill ' + planTagClass(d.tag), d.tag));
+      mid.appendChild(t);
+      mid.appendChild(el('div', 'muted', 'Now: ' + d.now + '  →  goal: ' + d.goal));
+      row.appendChild(mid);
+      dc.appendChild(row);
+    });
+    root.appendChild(dc);
+  }
+
+  // Weekly schedule
+  const sc = el('div', 'card');
+  sc.appendChild(el('h3', null, `${plan.weeks}-week schedule`));
+  (plan.weeksPlan || []).forEach((w, i) => {
+    const wk = el('div', 'coach-week' + (i === status.idx ? ' current' : ''));
+    const wh = el('div', 'coach-week-head');
+    const when = el('div', 'coach-week-when');
+    when.appendChild(el('span', 'coach-week-no', 'Week ' + w.week));
+    when.appendChild(el('span', 'muted', fmtPlanRange(w.start, w.end)));
+    wh.appendChild(when);
+    const pills = el('div', 'coach-week-pills');
+    if (i === status.idx) pills.appendChild(el('span', 'pill now', 'THIS WEEK'));
+    if (w.phase) pills.appendChild(el('span', 'pill ' + phaseClass(w.phase), w.phase));
+    wh.appendChild(pills);
+    wk.appendChild(wh);
+    DISC_ORDER.forEach(k => {
+      const lines = w[k];
+      if (!lines || !lines.length) return;
+      const dr = el('div', 'coach-disc');
+      dr.appendChild(el('div', 'coach-disc-emoji', planDiscEmoji(k)));
+      const body = el('div', 'coach-disc-lines');
+      lines.forEach(line => body.appendChild(el('div', 'coach-disc-line', line)));
+      dr.appendChild(body);
+      wk.appendChild(dr);
+    });
+    if (w.note) wk.appendChild(el('div', 'coach-week-note', w.note));
+    sc.appendChild(wk);
+  });
+  root.appendChild(sc);
+
+  // Coach's prescription
+  if (plan.prescription && plan.prescription.length) {
+    const pc = el('div', 'card');
+    pc.appendChild(el('h3', null, "Coach's prescription"));
+    plan.prescription.forEach(p => {
+      const row = el('div', 'rx-row');
+      row.appendChild(el('span', 'pill ' + planTagClass(p.tag), p.tag));
+      row.appendChild(el('span', 'rx-text', p.text));
+      pc.appendChild(row);
+    });
+    root.appendChild(pc);
+  }
+
+  const f = el('div', 'muted coach-source');
+  f.textContent = 'From ' + (plan.source || 'coach artifact') + (plan.generatedAt ? ' · generated ' + plan.generatedAt : '');
+  root.appendChild(f);
+}
+
+async function loadPlanData() {
+  try {
+    const res = await fetch('./plan.json', { cache: 'no-store' });
+    if (!res.ok) return;
+    state.plan = await res.json();
+    const coach = document.getElementById('tab-coach');
+    if (coach && coach.style.display !== 'none') renderCoachPlan();
+  } catch (e) { /* no plan yet — ignore */ }
+}
+
+// ============================================================
 //  INIT
 // ============================================================
 state.viewISO = todayISO();
 renderToday();
 loadSyncData();
+loadPlanData();
 
 // Register service worker for offline support
 if ('serviceWorker' in navigator) {
