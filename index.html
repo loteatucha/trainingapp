@@ -535,13 +535,13 @@
 
 const DEFAULT_SCHEDULE = {
   // dow 1..7 = Mon..Sun
-  1: { type: 'gym',  dayIdx: 0 },
-  2: { type: 'run',  variant: 'intervals' },
-  3: { type: 'gym',  dayIdx: 1 },
-  4: { type: 'swim' },
-  5: { type: 'gym',  dayIdx: 2 },
-  6: { type: 'run',  variant: 'long' },
-  7: { type: 'yoga' }
+  1: { type: 'gym',  dayIdx: 0 },              // Monday    — Gym · Day 1
+  2: { type: 'rest' },                          // Tuesday   — Rest
+  3: { type: 'run',  variant: 'intervals' },   // Wednesday — short run (Intervals)
+  4: { type: 'swim' },                          // Thursday  — Swim
+  5: { type: 'gym',  dayIdx: 1 },              // Friday    — Gym · Day 2
+  6: { type: 'run',  variant: 'long' },        // Saturday  — Run (Long)
+  7: { type: 'gym',  dayIdx: 2 }               // Sunday    — Gym · Day 3
 };
 
 // Bump GYM_VERSION whenever DEFAULT_GYM structure changes — forces a fresh seed
