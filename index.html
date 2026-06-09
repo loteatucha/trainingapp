@@ -454,6 +454,10 @@
   .pill.now { background: var(--accent); color: #fff; }
   .coach-source { margin-top: 14px; text-align: center; }
 
+  /* Strava performance charts footer */
+  .chart-foot { display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: baseline; margin-top: 8px; font-size: 12px; color: var(--muted); }
+  .chart-foot b { color: var(--ink); font-size: 13px; font-weight: 700; }
+
   .footer { text-align: center; color: var(--muted); font-size: 11px; margin-top: 16px; }
   .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--accent-strong); color: #fff;
     padding: 12px 20px; border-radius: 999px; font-size: 13px; font-weight: 600; box-shadow: 0 8px 24px rgba(0,0,0,.4); opacity: 0;
@@ -2815,6 +2819,101 @@ function renderSwimChartCard(root) {
   root.appendChild(card);
 }
 
+// ---- Strava performance charts: dual-axis (pace line, faster=up + distance bars) ----
+function stravaSeries(arr, sport) {
+  return arr.map(a => {
+    if (!(a.distance_m > 0) || !(a.moving_time_s > 0)) return null;
+    const paceSec = sport === 'swim'
+      ? a.moving_time_s / (a.distance_m / 100)   // sec per 100m
+      : a.moving_time_s / (a.distance_m / 1000); // sec per km
+    return { iso: a.date, dist: sport === 'swim' ? a.distance_m : a.distance_m / 1000, paceSec, raw: a };
+  }).filter(Boolean).sort((x, y) => x.iso.localeCompare(y.iso));
+}
+function buildDualAxisChart(series, cfg) {
+  const W = 320, H = 172, padL = 34, padR = 30, padT = 12, padB = 22;
+  const plotW = W - padL - padR, plotH = H - padT - padB, n = series.length;
+  const maxDist = Math.max(1, ...series.map(s => s.dist));
+  let minP = Math.min(...series.map(s => s.paceSec));
+  let maxP = Math.max(...series.map(s => s.paceSec));
+  if (cfg.paceClampMax) maxP = Math.min(maxP, cfg.paceClampMax);
+  if (minP >= maxP) { minP -= 10; maxP += 10; }
+  const rangeP = maxP - minP;
+  const clamp = v => Math.max(minP, Math.min(maxP, v));
+  const xFor = i => padL + (n <= 1 ? plotW / 2 : (i / (n - 1)) * plotW);
+  const yPace = sec => padT + ((clamp(sec) - minP) / rangeP) * plotH; // faster (lower sec) → higher
+  const yBarTop = d => padT + plotH - (d / maxDist) * plotH;
+  const barW = Math.max(1.5, (plotW / n) * 0.55);
+  const p = [`<svg class="chart-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">`];
+  [minP, (minP + maxP) / 2, maxP].forEach(pv => {
+    const y = yPace(pv);
+    p.push(`<line class="grid-line" x1="${padL}" y1="${y.toFixed(1)}" x2="${W - padR}" y2="${y.toFixed(1)}"/>`);
+    p.push(`<text class="axis-label" x="${padL - 4}" y="${(y + 3).toFixed(1)}" text-anchor="end">${cfg.paceFmt(Math.round(pv))}</text>`);
+  });
+  series.forEach((s, i) => {
+    const x = xFor(i), top = yBarTop(s.dist);
+    p.push(`<rect x="${(x - barW / 2).toFixed(1)}" y="${top.toFixed(1)}" width="${barW.toFixed(1)}" height="${(padT + plotH - top).toFixed(1)}" rx="1" fill="${cfg.color}" opacity="0.26"/>`);
+  });
+  p.push(`<text class="axis-label" x="${W - padR + 3}" y="${(padT + 4).toFixed(1)}" text-anchor="start">${cfg.distFmt(maxDist)}</text>`);
+  p.push(`<text class="axis-label" x="${W - padR + 3}" y="${(padT + plotH).toFixed(1)}" text-anchor="start">0</text>`);
+  const line = series.map((s, i) => `${xFor(i).toFixed(1)},${yPace(s.paceSec).toFixed(1)}`).join(' ');
+  p.push(`<polyline fill="none" stroke="${cfg.color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" points="${line}"/>`);
+  [0, Math.floor((n - 1) / 2), n - 1].forEach(i => {
+    if (i < 0 || i >= n) return;
+    const d = new Date(series[i].iso + 'T12:00:00');
+    const anchor = i === 0 ? 'start' : (i === n - 1 ? 'end' : 'middle');
+    p.push(`<text class="axis-label" x="${xFor(i).toFixed(1)}" y="${H - 6}" text-anchor="${anchor}">${d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</text>`);
+  });
+  p.push('</svg>');
+  const wrap = el('div'); wrap.innerHTML = p.join(''); return wrap.firstChild;
+}
+function perfChartCard(title, color, series, cfg, footHTML) {
+  const card = el('div', 'chart-card');
+  const head = el('div', 'chart-head');
+  head.innerHTML = `<div class="chart-title"><span class="dot" style="background:${color}"></span>${title}</div>`;
+  card.appendChild(head);
+  card.appendChild(buildDualAxisChart(series, cfg));
+  const legend = el('div', 'chart-legend');
+  legend.innerHTML = `<span><i style="background:${color}"></i>${cfg.paceLabel}</span>` +
+                     `<span><i style="background:${color};opacity:.3"></i>Distance</span>`;
+  card.appendChild(legend);
+  const foot = el('div', 'chart-foot'); foot.innerHTML = footHTML;
+  card.appendChild(foot);
+  return card;
+}
+function renderRunPerfChart(root) {
+  const runs = state.sync && state.sync.strava && state.sync.strava.runs;
+  if (!runs || !runs.length) return false;
+  const series = stravaSeries(runs, 'run');
+  if (!series.length) return false;
+  const totKm = series.reduce((n, s) => n + s.dist, 0);
+  const totT = series.reduce((n, s) => n + s.raw.moving_time_s, 0);
+  const best = Math.min(...series.map(s => s.paceSec));
+  const cads = runs.filter(r => r.cadence_spm).map(r => r.cadence_spm);
+  const cad = cads.length ? Math.round(cads.reduce((a, b) => a + b) / cads.length) : null;
+  const foot = `<b>Avg ${secondsToPace(Math.round(totT / totKm))}/km</b>` +
+               `<span>Best ${secondsToPace(Math.round(best))}/km</span>` +
+               `<span>${series.length} runs · ${totKm.toFixed(0)} km</span>` +
+               (cad ? `<span>Cadence ≈ ${cad} spm</span>` : '');
+  root.appendChild(perfChartCard('Running — pace &amp; distance', RUN_COLOR, series,
+    { color: RUN_COLOR, paceFmt: secondsToPace, paceLabel: 'Pace /km', distFmt: v => v.toFixed(0) + ' km' }, foot));
+  return true;
+}
+function renderSwimPerfChart(root) {
+  const swims = state.sync && state.sync.strava && state.sync.strava.swims;
+  if (!swims || !swims.length) return false;
+  const series = stravaSeries(swims, 'swim');
+  if (!series.length) return false;
+  const totM = series.reduce((n, s) => n + s.dist, 0);
+  const totT = series.reduce((n, s) => n + s.raw.moving_time_s, 0);
+  const best = Math.min(...series.map(s => s.paceSec));
+  const foot = `<b>Avg ${secondsToPace(Math.round(totT / (totM / 100)))}/100m</b>` +
+               `<span>Best ${secondsToPace(Math.round(best))}/100m</span>` +
+               `<span>${series.length} swims · ${(totM / 1000).toFixed(1)} km</span>`;
+  root.appendChild(perfChartCard('Swimming — pace per 100m', SWIM_COLOR, series,
+    { color: SWIM_COLOR, paceFmt: secondsToPace, paceLabel: 'Pace /100m', distFmt: v => Math.round(v) + ' m', paceClampMax: 360 }, foot));
+  return true;
+}
+
 // Week / Month switch shared by the trend charts; full re-render keeps both
 // charts (and their Distance/Pace state) in sync.
 function renderTimeframeToggle(root) {
@@ -2956,12 +3055,19 @@ function renderHistory() {
   renderConnectedCard(root);
 
   const entries = allEntries();
-  const hasTrends = doneWorkoutsOfType('run').length || doneWorkoutsOfType('swim').length;
 
-  // Trend charts with a shared Weekly/Monthly switch (each self-skips if no data)
-  if (hasTrends) renderTimeframeToggle(root);
-  renderRunChartCard(root);
-  renderSwimChartCard(root);
+  // Performance trends — prefer Strava (data.json); fall back to logged-workout charts
+  const strava = state.sync && state.sync.strava;
+  const hasStravaTrends = strava && (((strava.runs || []).length) || ((strava.swims || []).length));
+  if (hasStravaTrends) {
+    renderRunPerfChart(root);
+    renderSwimPerfChart(root);
+  } else {
+    const hasTrends = doneWorkoutsOfType('run').length || doneWorkoutsOfType('swim').length;
+    if (hasTrends) renderTimeframeToggle(root);
+    renderRunChartCard(root);
+    renderSwimChartCard(root);
+  }
 
   // Backup utility — kept above the log so the log stays at the bottom
   renderBackupCard(root);

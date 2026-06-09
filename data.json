@@ -553,6 +553,458 @@
         "achievement_count": 0,
         "pr_count": 0
       }
+    ],
+    "runs": [
+      {
+        "date": "2025-06-01",
+        "distance_m": 5008.8,
+        "moving_time_s": 1812,
+        "cadence_spm": null
+      },
+      {
+        "date": "2025-06-02",
+        "distance_m": 8009.2,
+        "moving_time_s": 2625,
+        "cadence_spm": 154
+      },
+      {
+        "date": "2025-06-06",
+        "distance_m": 6004.7,
+        "moving_time_s": 2024,
+        "cadence_spm": 156
+      },
+      {
+        "date": "2025-06-08",
+        "distance_m": 12028.1,
+        "moving_time_s": 4227,
+        "cadence_spm": 154
+      },
+      {
+        "date": "2025-06-13",
+        "distance_m": 6006.6,
+        "moving_time_s": 2071,
+        "cadence_spm": 155
+      },
+      {
+        "date": "2025-06-24",
+        "distance_m": 7013.9,
+        "moving_time_s": 2386,
+        "cadence_spm": 154
+      },
+      {
+        "date": "2025-06-26",
+        "distance_m": 6062.8,
+        "moving_time_s": 2038,
+        "cadence_spm": 155
+      },
+      {
+        "date": "2025-06-29",
+        "distance_m": 14008.4,
+        "moving_time_s": 4804,
+        "cadence_spm": 153
+      },
+      {
+        "date": "2025-07-03",
+        "distance_m": 6010.6,
+        "moving_time_s": 2093,
+        "cadence_spm": 154
+      },
+      {
+        "date": "2025-07-20",
+        "distance_m": 5271.3,
+        "moving_time_s": 1801,
+        "cadence_spm": 152
+      },
+      {
+        "date": "2025-09-14",
+        "distance_m": 4004.56,
+        "moving_time_s": 1548,
+        "cadence_spm": 149
+      },
+      {
+        "date": "2025-09-20",
+        "distance_m": 8023.4,
+        "moving_time_s": 2721,
+        "cadence_spm": 153
+      },
+      {
+        "date": "2025-09-28",
+        "distance_m": 7003.8,
+        "moving_time_s": 2351,
+        "cadence_spm": 154
+      },
+      {
+        "date": "2025-09-29",
+        "distance_m": 7548.8,
+        "moving_time_s": 2555,
+        "cadence_spm": 155
+      },
+      {
+        "date": "2025-10-02",
+        "distance_m": 8301.7,
+        "moving_time_s": 2886,
+        "cadence_spm": 153
+      },
+      {
+        "date": "2025-10-05",
+        "distance_m": 10009.1,
+        "moving_time_s": 3255,
+        "cadence_spm": 154
+      },
+      {
+        "date": "2025-10-12",
+        "distance_m": 10007.5,
+        "moving_time_s": 3128,
+        "cadence_spm": 155
+      },
+      {
+        "date": "2025-10-18",
+        "distance_m": 10019.9,
+        "moving_time_s": 3199,
+        "cadence_spm": 155
+      },
+      {
+        "date": "2025-10-19",
+        "distance_m": 12012.5,
+        "moving_time_s": 3721,
+        "cadence_spm": 155
+      },
+      {
+        "date": "2025-10-21",
+        "distance_m": 11404.4,
+        "moving_time_s": 3692,
+        "cadence_spm": 155
+      },
+      {
+        "date": "2025-10-25",
+        "distance_m": 8000.4,
+        "moving_time_s": 2678,
+        "cadence_spm": 154
+      },
+      {
+        "date": "2025-10-28",
+        "distance_m": 7002.8,
+        "moving_time_s": 2347,
+        "cadence_spm": 154
+      },
+      {
+        "date": "2025-11-02",
+        "distance_m": 10012,
+        "moving_time_s": 3035,
+        "cadence_spm": 156
+      },
+      {
+        "date": "2025-11-05",
+        "distance_m": 9425.4,
+        "moving_time_s": 3171,
+        "cadence_spm": 154
+      },
+      {
+        "date": "2025-11-08",
+        "distance_m": 12008.6,
+        "moving_time_s": 3792,
+        "cadence_spm": 153
+      },
+      {
+        "date": "2025-11-15",
+        "distance_m": 10010.3,
+        "moving_time_s": 2951,
+        "cadence_spm": 156
+      },
+      {
+        "date": "2025-11-23",
+        "distance_m": 10012.4,
+        "moving_time_s": 2926,
+        "cadence_spm": 156
+      },
+      {
+        "date": "2025-12-03",
+        "distance_m": 6930.1,
+        "moving_time_s": 2258,
+        "cadence_spm": 155
+      },
+      {
+        "date": "2025-12-06",
+        "distance_m": 10004.3,
+        "moving_time_s": 3044,
+        "cadence_spm": 155
+      },
+      {
+        "date": "2025-12-07",
+        "distance_m": 10003.8,
+        "moving_time_s": 2934,
+        "cadence_spm": 157
+      },
+      {
+        "date": "2025-12-13",
+        "distance_m": 5009,
+        "moving_time_s": 1616,
+        "cadence_spm": 153
+      },
+      {
+        "date": "2025-12-20",
+        "distance_m": 5005.4,
+        "moving_time_s": 1701,
+        "cadence_spm": 153
+      },
+      {
+        "date": "2025-12-21",
+        "distance_m": 5002,
+        "moving_time_s": 1671,
+        "cadence_spm": 154
+      },
+      {
+        "date": "2025-12-24",
+        "distance_m": 5002.6,
+        "moving_time_s": 1643,
+        "cadence_spm": 154
+      },
+      {
+        "date": "2025-12-25",
+        "distance_m": 8010.7,
+        "moving_time_s": 2562,
+        "cadence_spm": 154
+      },
+      {
+        "date": "2025-12-27",
+        "distance_m": 8999.7,
+        "moving_time_s": 3188,
+        "cadence_spm": 150
+      },
+      {
+        "date": "2026-01-02",
+        "distance_m": 10003.5,
+        "moving_time_s": 3725,
+        "cadence_spm": 154
+      },
+      {
+        "date": "2026-01-04",
+        "distance_m": 10007.8,
+        "moving_time_s": 3297,
+        "cadence_spm": 156
+      },
+      {
+        "date": "2026-05-23",
+        "distance_m": 6005.5,
+        "moving_time_s": 2115,
+        "cadence_spm": 152
+      },
+      {
+        "date": "2026-05-25",
+        "distance_m": 7025.4,
+        "moving_time_s": 2435,
+        "cadence_spm": 151
+      },
+      {
+        "date": "2026-05-30",
+        "distance_m": 8032.2,
+        "moving_time_s": 2658,
+        "cadence_spm": 153
+      },
+      {
+        "date": "2026-06-03",
+        "distance_m": 7008.7,
+        "moving_time_s": 2508,
+        "cadence_spm": 153
+      },
+      {
+        "date": "2026-06-06",
+        "distance_m": 9006.5,
+        "moving_time_s": 3070,
+        "cadence_spm": 151
+      }
+    ],
+    "swims": [
+      {
+        "date": "2025-08-17",
+        "distance_m": 975,
+        "moving_time_s": 1472
+      },
+      {
+        "date": "2025-08-19",
+        "distance_m": 1650,
+        "moving_time_s": 2088
+      },
+      {
+        "date": "2025-08-21",
+        "distance_m": 1525,
+        "moving_time_s": 3166
+      },
+      {
+        "date": "2025-08-31",
+        "distance_m": 625,
+        "moving_time_s": 814
+      },
+      {
+        "date": "2025-09-01",
+        "distance_m": 950,
+        "moving_time_s": 1396
+      },
+      {
+        "date": "2025-09-04",
+        "distance_m": 1200,
+        "moving_time_s": 3341
+      },
+      {
+        "date": "2025-09-12",
+        "distance_m": 925,
+        "moving_time_s": 1337
+      },
+      {
+        "date": "2025-09-17",
+        "distance_m": 1350,
+        "moving_time_s": 1994
+      },
+      {
+        "date": "2025-09-25",
+        "distance_m": 1050,
+        "moving_time_s": 2709
+      },
+      {
+        "date": "2025-09-27",
+        "distance_m": 1050,
+        "moving_time_s": 1382
+      },
+      {
+        "date": "2025-10-04",
+        "distance_m": 725,
+        "moving_time_s": 1066
+      },
+      {
+        "date": "2025-10-09",
+        "distance_m": 1450,
+        "moving_time_s": 3348
+      },
+      {
+        "date": "2025-10-16",
+        "distance_m": 1625,
+        "moving_time_s": 2547
+      },
+      {
+        "date": "2025-10-23",
+        "distance_m": 1200,
+        "moving_time_s": 2351
+      },
+      {
+        "date": "2025-10-30",
+        "distance_m": 1875,
+        "moving_time_s": 2288
+      },
+      {
+        "date": "2025-11-01",
+        "distance_m": 1025,
+        "moving_time_s": 1774
+      },
+      {
+        "date": "2025-11-07",
+        "distance_m": 1800,
+        "moving_time_s": 2400
+      },
+      {
+        "date": "2025-11-13",
+        "distance_m": 1500,
+        "moving_time_s": 2041
+      },
+      {
+        "date": "2025-11-20",
+        "distance_m": 1225,
+        "moving_time_s": 1586
+      },
+      {
+        "date": "2025-11-27",
+        "distance_m": 525,
+        "moving_time_s": 700
+      },
+      {
+        "date": "2025-12-11",
+        "distance_m": 1500,
+        "moving_time_s": 1814
+      },
+      {
+        "date": "2025-12-29",
+        "distance_m": 336.7,
+        "moving_time_s": 287
+      },
+      {
+        "date": "2025-12-29",
+        "distance_m": 140.6,
+        "moving_time_s": 628
+      },
+      {
+        "date": "2026-01-05",
+        "distance_m": 1000,
+        "moving_time_s": 1455
+      },
+      {
+        "date": "2026-01-12",
+        "distance_m": 1525,
+        "moving_time_s": 1828
+      },
+      {
+        "date": "2026-01-16",
+        "distance_m": 800,
+        "moving_time_s": 1173
+      },
+      {
+        "date": "2026-01-19",
+        "distance_m": 1600,
+        "moving_time_s": 1923
+      },
+      {
+        "date": "2026-01-22",
+        "distance_m": 1725,
+        "moving_time_s": 2139
+      },
+      {
+        "date": "2026-02-28",
+        "distance_m": 1250,
+        "moving_time_s": 1659
+      },
+      {
+        "date": "2026-03-02",
+        "distance_m": 1000,
+        "moving_time_s": 1402
+      },
+      {
+        "date": "2026-04-12",
+        "distance_m": 925,
+        "moving_time_s": 1159
+      },
+      {
+        "date": "2026-04-19",
+        "distance_m": 1775,
+        "moving_time_s": 2229
+      },
+      {
+        "date": "2026-04-30",
+        "distance_m": 1525,
+        "moving_time_s": 1943
+      },
+      {
+        "date": "2026-05-07",
+        "distance_m": 1925,
+        "moving_time_s": 2389
+      },
+      {
+        "date": "2026-05-14",
+        "distance_m": 1350,
+        "moving_time_s": 1606
+      },
+      {
+        "date": "2026-05-24",
+        "distance_m": 1500,
+        "moving_time_s": 1841
+      },
+      {
+        "date": "2026-05-31",
+        "distance_m": 1725,
+        "moving_time_s": 2136
+      },
+      {
+        "date": "2026-06-05",
+        "distance_m": 1750,
+        "moving_time_s": 2142
+      }
     ]
   },
   "whoop": {
