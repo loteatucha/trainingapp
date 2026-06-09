@@ -1,7 +1,10 @@
 {
   "schemaVersion": 1,
-  "syncedAt": "2026-06-09T01:25:05Z",
-  "sources": { "strava": true, "whoop": false },
+  "syncedAt": "2026-06-09T19:09:52.976Z",
+  "sources": {
+    "strava": true,
+    "whoop": true
+  },
   "athlete": {
     "name": "Cristobal De Atucha",
     "strava_id": 66071545,
@@ -10,43 +13,1050 @@
   "strava": {
     "syncedAt": "2026-06-09T01:25:05Z",
     "activities": [
-      { "id": "18835697758", "date": "2026-06-08", "start_local": "2026-06-08T07:02:37", "name": "Morning Weight Training", "sport_type": "WeightTraining", "distance_m": 0, "moving_time_s": 3633, "elapsed_time_s": 3633, "elevation_gain_m": 0, "avg_speed_mps": 0, "max_speed_mps": 0, "avg_cadence": null, "relative_effort": 7, "calories": 256, "achievement_count": 0, "pr_count": 0 },
-      { "id": "18828602970", "date": "2026-06-07", "start_local": "2026-06-07T13:34:38", "name": "Afternoon Weight Training", "sport_type": "WeightTraining", "distance_m": 0, "moving_time_s": 3925, "elapsed_time_s": 3925, "elevation_gain_m": 0, "avg_speed_mps": 0, "max_speed_mps": 0, "avg_cadence": null, "relative_effort": 23, "calories": 503, "achievement_count": 0, "pr_count": 0 },
-      { "id": "18813529670", "date": "2026-06-06", "start_local": "2026-06-06T12:24:10", "name": "Lunch Run", "sport_type": "Run", "distance_m": 9006.5, "moving_time_s": 3070, "elapsed_time_s": 3346, "elevation_gain_m": 30.3, "avg_speed_mps": 2.9337, "max_speed_mps": 6.82, "avg_cadence": 75.7, "relative_effort": 186, "calories": 816, "achievement_count": 7, "pr_count": 6 },
-      { "id": "18802316975", "date": "2026-06-05", "start_local": "2026-06-05T17:18:30", "name": "Afternoon Swim", "sport_type": "Swim", "distance_m": 1750, "moving_time_s": 2142, "elapsed_time_s": 3078, "elevation_gain_m": 0, "avg_speed_mps": 0.817, "max_speed_mps": 2.1, "avg_cadence": null, "relative_effort": 51, "calories": 420, "achievement_count": 0, "pr_count": 0 },
-      { "id": "18782854895", "date": "2026-06-04", "start_local": "2026-06-04T07:09:24", "name": "Morning Weight Training", "sport_type": "WeightTraining", "distance_m": 0, "moving_time_s": 2934, "elapsed_time_s": 2934, "elevation_gain_m": 0, "avg_speed_mps": 0, "max_speed_mps": 0, "avg_cadence": null, "relative_effort": 8, "calories": 269, "achievement_count": 0, "pr_count": 0 },
-      { "id": "18768845115", "date": "2026-06-03", "start_local": "2026-06-03T07:07:25", "name": "Morning Run", "sport_type": "Run", "distance_m": 7008.7, "moving_time_s": 2508, "elapsed_time_s": 2511, "elevation_gain_m": 8.9, "avg_speed_mps": 2.7945, "max_speed_mps": 4.8, "avg_cadence": 76.4, "relative_effort": 69, "calories": 567, "achievement_count": 4, "pr_count": 4 },
-      { "id": "18740790727", "date": "2026-06-01", "start_local": "2026-06-01T06:56:49", "name": "Morning Weight Training", "sport_type": "WeightTraining", "distance_m": 0, "moving_time_s": 3636, "elapsed_time_s": 3636, "elevation_gain_m": 0, "avg_speed_mps": 0, "max_speed_mps": 0, "avg_cadence": null, "relative_effort": 7, "calories": 229, "achievement_count": 0, "pr_count": 0 },
-      { "id": "18733632858", "date": "2026-05-31", "start_local": "2026-05-31T13:48:31", "name": "Afternoon Swim", "sport_type": "Swim", "distance_m": 1725, "moving_time_s": 2136, "elapsed_time_s": 2808, "elevation_gain_m": 0, "avg_speed_mps": 0.8076, "max_speed_mps": 1.8, "avg_cadence": null, "relative_effort": 30, "calories": 424, "achievement_count": 1, "pr_count": 0 },
-      { "id": "18733627323", "date": "2026-05-31", "start_local": "2026-05-31T12:25:49", "name": "Lunch Weight Training", "sport_type": "WeightTraining", "distance_m": 0, "moving_time_s": 3730, "elapsed_time_s": 3730, "elevation_gain_m": 0, "avg_speed_mps": 0, "max_speed_mps": 0, "avg_cadence": null, "relative_effort": 12, "calories": 351, "achievement_count": 0, "pr_count": 0 },
-      { "id": "18717437405", "date": "2026-05-30", "start_local": "2026-05-30T10:51:13", "name": "Morning Run", "sport_type": "Run", "distance_m": 8032.2, "moving_time_s": 2658, "elapsed_time_s": 2658, "elevation_gain_m": 19.6, "avg_speed_mps": 3.0219, "max_speed_mps": 6.42, "avg_cadence": 76.6, "relative_effort": 176, "calories": 717, "achievement_count": 6, "pr_count": 6 },
-      { "id": "18660269459", "date": "2026-05-26", "start_local": "2026-05-26T07:05:38", "name": "Morning Weight Training", "sport_type": "WeightTraining", "distance_m": 0, "moving_time_s": 3475, "elapsed_time_s": 3475, "elevation_gain_m": 0, "avg_speed_mps": 0, "max_speed_mps": 0, "avg_cadence": null, "relative_effort": 8, "calories": 264, "achievement_count": 0, "pr_count": 0 },
-      { "id": "18650111163", "date": "2026-05-25", "start_local": "2026-05-25T11:36:33", "name": "Lunch Run", "sport_type": "Run", "distance_m": 7025.4, "moving_time_s": 2435, "elapsed_time_s": 2460, "elevation_gain_m": 19.6, "avg_speed_mps": 2.8852, "max_speed_mps": 4.4667, "avg_cadence": 75.4, "relative_effort": 114, "calories": 593, "achievement_count": 9, "pr_count": 6 },
-      { "id": "18639082714", "date": "2026-05-24", "start_local": "2026-05-24T13:24:42", "name": "Afternoon Swim", "sport_type": "Swim", "distance_m": 1500, "moving_time_s": 1841, "elapsed_time_s": 2443, "elevation_gain_m": 0, "avg_speed_mps": 0.8148, "max_speed_mps": 1.32, "avg_cadence": null, "relative_effort": 8, "calories": 362, "achievement_count": 0, "pr_count": 0 },
-      { "id": "18638091152", "date": "2026-05-24", "start_local": "2026-05-24T11:48:39", "name": "Lunch Weight Training", "sport_type": "WeightTraining", "distance_m": 0, "moving_time_s": 3987, "elapsed_time_s": 3987, "elevation_gain_m": 0, "avg_speed_mps": 0, "max_speed_mps": 0, "avg_cadence": null, "relative_effort": 17, "calories": 445, "achievement_count": 1, "pr_count": 0 },
-      { "id": "18624158999", "date": "2026-05-23", "start_local": "2026-05-23T11:58:41", "name": "Lunch Run", "sport_type": "Run", "distance_m": 6005.5, "moving_time_s": 2115, "elapsed_time_s": 2148, "elevation_gain_m": 7.6, "avg_speed_mps": 2.8395, "max_speed_mps": 6.2571, "avg_cadence": 76.1, "relative_effort": 67, "calories": 497, "achievement_count": 8, "pr_count": 8 },
-      { "id": "18607762226", "date": "2026-05-22", "start_local": "2026-05-22T07:33:10", "name": "Morning Weight Training", "sport_type": "WeightTraining", "distance_m": 0, "moving_time_s": 3227, "elapsed_time_s": 3227, "elevation_gain_m": 0, "avg_speed_mps": 0, "max_speed_mps": 0, "avg_cadence": null, "relative_effort": 10, "calories": 321, "achievement_count": 0, "pr_count": 0 },
-      { "id": "18602645540", "date": "2026-05-21", "start_local": "2026-05-21T19:39:36", "name": "Evening Weight Training", "sport_type": "WeightTraining", "distance_m": 0, "moving_time_s": 3884, "elapsed_time_s": 3884, "elevation_gain_m": 0, "avg_speed_mps": 0, "max_speed_mps": 0, "avg_cadence": null, "relative_effort": 20, "calories": 463, "achievement_count": 0, "pr_count": 0 },
-      { "id": "18554140491", "date": "2026-05-18", "start_local": "2026-05-18T07:29:44", "name": "Morning Weight Training", "sport_type": "WeightTraining", "distance_m": 0, "moving_time_s": 3749, "elapsed_time_s": 3749, "elevation_gain_m": 0, "avg_speed_mps": 0, "max_speed_mps": 0, "avg_cadence": null, "relative_effort": 16, "calories": 425, "achievement_count": 0, "pr_count": 0 },
-      { "id": "18547025207", "date": "2026-05-17", "start_local": "2026-05-17T12:54:03", "name": "Lunch Weight Training", "sport_type": "WeightTraining", "distance_m": 0, "moving_time_s": 4716, "elapsed_time_s": 4716, "elevation_gain_m": 0, "avg_speed_mps": 0, "max_speed_mps": 0, "avg_cadence": null, "relative_effort": 35, "calories": 657, "achievement_count": 0, "pr_count": 0 },
-      { "id": "18533540835", "date": "2026-05-16", "start_local": "2026-05-16T13:56:33", "name": "Afternoon Weight Training", "sport_type": "WeightTraining", "distance_m": 0, "moving_time_s": 2501, "elapsed_time_s": 2501, "elevation_gain_m": 0, "avg_speed_mps": 0, "max_speed_mps": 0, "avg_cadence": null, "relative_effort": 10, "calories": 315, "achievement_count": 1, "pr_count": 0 },
-      { "id": "18522372368", "date": "2026-05-15", "start_local": "2026-05-15T18:49:10", "name": "Evening Weight Training", "sport_type": "WeightTraining", "distance_m": 0, "moving_time_s": 2863, "elapsed_time_s": 2863, "elevation_gain_m": 0, "avg_speed_mps": 0, "max_speed_mps": 0, "avg_cadence": null, "relative_effort": 8, "calories": 296, "achievement_count": 1, "pr_count": 0 },
-      { "id": "18511322066", "date": "2026-05-14", "start_local": "2026-05-14T18:58:42", "name": "Evening Swim", "sport_type": "Swim", "distance_m": 1350, "moving_time_s": 1606, "elapsed_time_s": 2328, "elevation_gain_m": 0, "avg_speed_mps": 0.8406, "max_speed_mps": 1.68, "avg_cadence": null, "relative_effort": 31, "calories": 349, "achievement_count": 0, "pr_count": 0 },
-      { "id": "18490317712", "date": "2026-05-13", "start_local": "2026-05-13T07:28:52", "name": "Morning Weight Training", "sport_type": "WeightTraining", "distance_m": 0, "moving_time_s": 3732, "elapsed_time_s": 3732, "elevation_gain_m": 0, "avg_speed_mps": 0, "max_speed_mps": 0, "avg_cadence": null, "relative_effort": 18, "calories": 447, "achievement_count": 0, "pr_count": 0 },
-      { "id": "18462850472", "date": "2026-05-11", "start_local": "2026-05-11T07:10:25", "name": "Morning Weight Training", "sport_type": "WeightTraining", "distance_m": 0, "moving_time_s": 2888, "elapsed_time_s": 2888, "elevation_gain_m": 0, "avg_speed_mps": 0, "max_speed_mps": 0, "avg_cadence": null, "relative_effort": 7, "calories": 267, "achievement_count": 0, "pr_count": 0 },
-      { "id": "18455947833", "date": "2026-05-10", "start_local": "2026-05-10T12:35:54", "name": "Lunch Weight Training", "sport_type": "WeightTraining", "distance_m": 0, "moving_time_s": 4088, "elapsed_time_s": 4088, "elevation_gain_m": 0, "avg_speed_mps": 0, "max_speed_mps": 0, "avg_cadence": null, "relative_effort": 25, "calories": 536, "achievement_count": 0, "pr_count": 0 },
-      { "id": "18441607137", "date": "2026-05-09", "start_local": "2026-05-09T11:26:43", "name": "Lunch Weight Training", "sport_type": "WeightTraining", "distance_m": 0, "moving_time_s": 4078, "elapsed_time_s": 4078, "elevation_gain_m": 0, "avg_speed_mps": 0, "max_speed_mps": 0, "avg_cadence": null, "relative_effort": 19, "calories": 476, "achievement_count": 1, "pr_count": 0 },
-      { "id": "18431731172", "date": "2026-05-08", "start_local": "2026-05-08T19:21:23", "name": "Evening Weight Training", "sport_type": "WeightTraining", "distance_m": 0, "moving_time_s": 3530, "elapsed_time_s": 3530, "elevation_gain_m": 0, "avg_speed_mps": 0, "max_speed_mps": 0, "avg_cadence": null, "relative_effort": 13, "calories": 390, "achievement_count": 0, "pr_count": 0 },
-      { "id": "18412052965", "date": "2026-05-07", "start_local": "2026-05-07T07:59:49", "name": "Morning Swim", "sport_type": "Swim", "distance_m": 1925, "moving_time_s": 2389, "elapsed_time_s": 3384, "elevation_gain_m": 0, "avg_speed_mps": 0.8058, "max_speed_mps": 2.1, "avg_cadence": null, "relative_effort": 35, "calories": 479, "achievement_count": 0, "pr_count": 0 },
-      { "id": "18398164168", "date": "2026-05-06", "start_local": "2026-05-06T07:04:03", "name": "Morning Weight Training", "sport_type": "WeightTraining", "distance_m": 0, "moving_time_s": 3786, "elapsed_time_s": 3786, "elevation_gain_m": 0, "avg_speed_mps": 0, "max_speed_mps": 0, "avg_cadence": null, "relative_effort": 15, "calories": 453, "achievement_count": 0, "pr_count": 0 },
-      { "id": "18371030707", "date": "2026-05-04", "start_local": "2026-05-04T07:07:41", "name": "Morning Weight Training", "sport_type": "WeightTraining", "distance_m": 0, "moving_time_s": 3450, "elapsed_time_s": 3450, "elevation_gain_m": 0, "avg_speed_mps": 0, "max_speed_mps": 0, "avg_cadence": null, "relative_effort": 9, "calories": 293, "achievement_count": 0, "pr_count": 0 }
+      {
+        "id": "18835697758",
+        "date": "2026-06-08",
+        "start_local": "2026-06-08T07:02:37",
+        "name": "Morning Weight Training",
+        "sport_type": "WeightTraining",
+        "distance_m": 0,
+        "moving_time_s": 3633,
+        "elapsed_time_s": 3633,
+        "elevation_gain_m": 0,
+        "avg_speed_mps": 0,
+        "max_speed_mps": 0,
+        "avg_cadence": null,
+        "relative_effort": 7,
+        "calories": 256,
+        "achievement_count": 0,
+        "pr_count": 0
+      },
+      {
+        "id": "18828602970",
+        "date": "2026-06-07",
+        "start_local": "2026-06-07T13:34:38",
+        "name": "Afternoon Weight Training",
+        "sport_type": "WeightTraining",
+        "distance_m": 0,
+        "moving_time_s": 3925,
+        "elapsed_time_s": 3925,
+        "elevation_gain_m": 0,
+        "avg_speed_mps": 0,
+        "max_speed_mps": 0,
+        "avg_cadence": null,
+        "relative_effort": 23,
+        "calories": 503,
+        "achievement_count": 0,
+        "pr_count": 0
+      },
+      {
+        "id": "18813529670",
+        "date": "2026-06-06",
+        "start_local": "2026-06-06T12:24:10",
+        "name": "Lunch Run",
+        "sport_type": "Run",
+        "distance_m": 9006.5,
+        "moving_time_s": 3070,
+        "elapsed_time_s": 3346,
+        "elevation_gain_m": 30.3,
+        "avg_speed_mps": 2.9337,
+        "max_speed_mps": 6.82,
+        "avg_cadence": 75.7,
+        "relative_effort": 186,
+        "calories": 816,
+        "achievement_count": 7,
+        "pr_count": 6
+      },
+      {
+        "id": "18802316975",
+        "date": "2026-06-05",
+        "start_local": "2026-06-05T17:18:30",
+        "name": "Afternoon Swim",
+        "sport_type": "Swim",
+        "distance_m": 1750,
+        "moving_time_s": 2142,
+        "elapsed_time_s": 3078,
+        "elevation_gain_m": 0,
+        "avg_speed_mps": 0.817,
+        "max_speed_mps": 2.1,
+        "avg_cadence": null,
+        "relative_effort": 51,
+        "calories": 420,
+        "achievement_count": 0,
+        "pr_count": 0
+      },
+      {
+        "id": "18782854895",
+        "date": "2026-06-04",
+        "start_local": "2026-06-04T07:09:24",
+        "name": "Morning Weight Training",
+        "sport_type": "WeightTraining",
+        "distance_m": 0,
+        "moving_time_s": 2934,
+        "elapsed_time_s": 2934,
+        "elevation_gain_m": 0,
+        "avg_speed_mps": 0,
+        "max_speed_mps": 0,
+        "avg_cadence": null,
+        "relative_effort": 8,
+        "calories": 269,
+        "achievement_count": 0,
+        "pr_count": 0
+      },
+      {
+        "id": "18768845115",
+        "date": "2026-06-03",
+        "start_local": "2026-06-03T07:07:25",
+        "name": "Morning Run",
+        "sport_type": "Run",
+        "distance_m": 7008.7,
+        "moving_time_s": 2508,
+        "elapsed_time_s": 2511,
+        "elevation_gain_m": 8.9,
+        "avg_speed_mps": 2.7945,
+        "max_speed_mps": 4.8,
+        "avg_cadence": 76.4,
+        "relative_effort": 69,
+        "calories": 567,
+        "achievement_count": 4,
+        "pr_count": 4
+      },
+      {
+        "id": "18740790727",
+        "date": "2026-06-01",
+        "start_local": "2026-06-01T06:56:49",
+        "name": "Morning Weight Training",
+        "sport_type": "WeightTraining",
+        "distance_m": 0,
+        "moving_time_s": 3636,
+        "elapsed_time_s": 3636,
+        "elevation_gain_m": 0,
+        "avg_speed_mps": 0,
+        "max_speed_mps": 0,
+        "avg_cadence": null,
+        "relative_effort": 7,
+        "calories": 229,
+        "achievement_count": 0,
+        "pr_count": 0
+      },
+      {
+        "id": "18733632858",
+        "date": "2026-05-31",
+        "start_local": "2026-05-31T13:48:31",
+        "name": "Afternoon Swim",
+        "sport_type": "Swim",
+        "distance_m": 1725,
+        "moving_time_s": 2136,
+        "elapsed_time_s": 2808,
+        "elevation_gain_m": 0,
+        "avg_speed_mps": 0.8076,
+        "max_speed_mps": 1.8,
+        "avg_cadence": null,
+        "relative_effort": 30,
+        "calories": 424,
+        "achievement_count": 1,
+        "pr_count": 0
+      },
+      {
+        "id": "18733627323",
+        "date": "2026-05-31",
+        "start_local": "2026-05-31T12:25:49",
+        "name": "Lunch Weight Training",
+        "sport_type": "WeightTraining",
+        "distance_m": 0,
+        "moving_time_s": 3730,
+        "elapsed_time_s": 3730,
+        "elevation_gain_m": 0,
+        "avg_speed_mps": 0,
+        "max_speed_mps": 0,
+        "avg_cadence": null,
+        "relative_effort": 12,
+        "calories": 351,
+        "achievement_count": 0,
+        "pr_count": 0
+      },
+      {
+        "id": "18717437405",
+        "date": "2026-05-30",
+        "start_local": "2026-05-30T10:51:13",
+        "name": "Morning Run",
+        "sport_type": "Run",
+        "distance_m": 8032.2,
+        "moving_time_s": 2658,
+        "elapsed_time_s": 2658,
+        "elevation_gain_m": 19.6,
+        "avg_speed_mps": 3.0219,
+        "max_speed_mps": 6.42,
+        "avg_cadence": 76.6,
+        "relative_effort": 176,
+        "calories": 717,
+        "achievement_count": 6,
+        "pr_count": 6
+      },
+      {
+        "id": "18660269459",
+        "date": "2026-05-26",
+        "start_local": "2026-05-26T07:05:38",
+        "name": "Morning Weight Training",
+        "sport_type": "WeightTraining",
+        "distance_m": 0,
+        "moving_time_s": 3475,
+        "elapsed_time_s": 3475,
+        "elevation_gain_m": 0,
+        "avg_speed_mps": 0,
+        "max_speed_mps": 0,
+        "avg_cadence": null,
+        "relative_effort": 8,
+        "calories": 264,
+        "achievement_count": 0,
+        "pr_count": 0
+      },
+      {
+        "id": "18650111163",
+        "date": "2026-05-25",
+        "start_local": "2026-05-25T11:36:33",
+        "name": "Lunch Run",
+        "sport_type": "Run",
+        "distance_m": 7025.4,
+        "moving_time_s": 2435,
+        "elapsed_time_s": 2460,
+        "elevation_gain_m": 19.6,
+        "avg_speed_mps": 2.8852,
+        "max_speed_mps": 4.4667,
+        "avg_cadence": 75.4,
+        "relative_effort": 114,
+        "calories": 593,
+        "achievement_count": 9,
+        "pr_count": 6
+      },
+      {
+        "id": "18639082714",
+        "date": "2026-05-24",
+        "start_local": "2026-05-24T13:24:42",
+        "name": "Afternoon Swim",
+        "sport_type": "Swim",
+        "distance_m": 1500,
+        "moving_time_s": 1841,
+        "elapsed_time_s": 2443,
+        "elevation_gain_m": 0,
+        "avg_speed_mps": 0.8148,
+        "max_speed_mps": 1.32,
+        "avg_cadence": null,
+        "relative_effort": 8,
+        "calories": 362,
+        "achievement_count": 0,
+        "pr_count": 0
+      },
+      {
+        "id": "18638091152",
+        "date": "2026-05-24",
+        "start_local": "2026-05-24T11:48:39",
+        "name": "Lunch Weight Training",
+        "sport_type": "WeightTraining",
+        "distance_m": 0,
+        "moving_time_s": 3987,
+        "elapsed_time_s": 3987,
+        "elevation_gain_m": 0,
+        "avg_speed_mps": 0,
+        "max_speed_mps": 0,
+        "avg_cadence": null,
+        "relative_effort": 17,
+        "calories": 445,
+        "achievement_count": 1,
+        "pr_count": 0
+      },
+      {
+        "id": "18624158999",
+        "date": "2026-05-23",
+        "start_local": "2026-05-23T11:58:41",
+        "name": "Lunch Run",
+        "sport_type": "Run",
+        "distance_m": 6005.5,
+        "moving_time_s": 2115,
+        "elapsed_time_s": 2148,
+        "elevation_gain_m": 7.6,
+        "avg_speed_mps": 2.8395,
+        "max_speed_mps": 6.2571,
+        "avg_cadence": 76.1,
+        "relative_effort": 67,
+        "calories": 497,
+        "achievement_count": 8,
+        "pr_count": 8
+      },
+      {
+        "id": "18607762226",
+        "date": "2026-05-22",
+        "start_local": "2026-05-22T07:33:10",
+        "name": "Morning Weight Training",
+        "sport_type": "WeightTraining",
+        "distance_m": 0,
+        "moving_time_s": 3227,
+        "elapsed_time_s": 3227,
+        "elevation_gain_m": 0,
+        "avg_speed_mps": 0,
+        "max_speed_mps": 0,
+        "avg_cadence": null,
+        "relative_effort": 10,
+        "calories": 321,
+        "achievement_count": 0,
+        "pr_count": 0
+      },
+      {
+        "id": "18602645540",
+        "date": "2026-05-21",
+        "start_local": "2026-05-21T19:39:36",
+        "name": "Evening Weight Training",
+        "sport_type": "WeightTraining",
+        "distance_m": 0,
+        "moving_time_s": 3884,
+        "elapsed_time_s": 3884,
+        "elevation_gain_m": 0,
+        "avg_speed_mps": 0,
+        "max_speed_mps": 0,
+        "avg_cadence": null,
+        "relative_effort": 20,
+        "calories": 463,
+        "achievement_count": 0,
+        "pr_count": 0
+      },
+      {
+        "id": "18554140491",
+        "date": "2026-05-18",
+        "start_local": "2026-05-18T07:29:44",
+        "name": "Morning Weight Training",
+        "sport_type": "WeightTraining",
+        "distance_m": 0,
+        "moving_time_s": 3749,
+        "elapsed_time_s": 3749,
+        "elevation_gain_m": 0,
+        "avg_speed_mps": 0,
+        "max_speed_mps": 0,
+        "avg_cadence": null,
+        "relative_effort": 16,
+        "calories": 425,
+        "achievement_count": 0,
+        "pr_count": 0
+      },
+      {
+        "id": "18547025207",
+        "date": "2026-05-17",
+        "start_local": "2026-05-17T12:54:03",
+        "name": "Lunch Weight Training",
+        "sport_type": "WeightTraining",
+        "distance_m": 0,
+        "moving_time_s": 4716,
+        "elapsed_time_s": 4716,
+        "elevation_gain_m": 0,
+        "avg_speed_mps": 0,
+        "max_speed_mps": 0,
+        "avg_cadence": null,
+        "relative_effort": 35,
+        "calories": 657,
+        "achievement_count": 0,
+        "pr_count": 0
+      },
+      {
+        "id": "18533540835",
+        "date": "2026-05-16",
+        "start_local": "2026-05-16T13:56:33",
+        "name": "Afternoon Weight Training",
+        "sport_type": "WeightTraining",
+        "distance_m": 0,
+        "moving_time_s": 2501,
+        "elapsed_time_s": 2501,
+        "elevation_gain_m": 0,
+        "avg_speed_mps": 0,
+        "max_speed_mps": 0,
+        "avg_cadence": null,
+        "relative_effort": 10,
+        "calories": 315,
+        "achievement_count": 1,
+        "pr_count": 0
+      },
+      {
+        "id": "18522372368",
+        "date": "2026-05-15",
+        "start_local": "2026-05-15T18:49:10",
+        "name": "Evening Weight Training",
+        "sport_type": "WeightTraining",
+        "distance_m": 0,
+        "moving_time_s": 2863,
+        "elapsed_time_s": 2863,
+        "elevation_gain_m": 0,
+        "avg_speed_mps": 0,
+        "max_speed_mps": 0,
+        "avg_cadence": null,
+        "relative_effort": 8,
+        "calories": 296,
+        "achievement_count": 1,
+        "pr_count": 0
+      },
+      {
+        "id": "18511322066",
+        "date": "2026-05-14",
+        "start_local": "2026-05-14T18:58:42",
+        "name": "Evening Swim",
+        "sport_type": "Swim",
+        "distance_m": 1350,
+        "moving_time_s": 1606,
+        "elapsed_time_s": 2328,
+        "elevation_gain_m": 0,
+        "avg_speed_mps": 0.8406,
+        "max_speed_mps": 1.68,
+        "avg_cadence": null,
+        "relative_effort": 31,
+        "calories": 349,
+        "achievement_count": 0,
+        "pr_count": 0
+      },
+      {
+        "id": "18490317712",
+        "date": "2026-05-13",
+        "start_local": "2026-05-13T07:28:52",
+        "name": "Morning Weight Training",
+        "sport_type": "WeightTraining",
+        "distance_m": 0,
+        "moving_time_s": 3732,
+        "elapsed_time_s": 3732,
+        "elevation_gain_m": 0,
+        "avg_speed_mps": 0,
+        "max_speed_mps": 0,
+        "avg_cadence": null,
+        "relative_effort": 18,
+        "calories": 447,
+        "achievement_count": 0,
+        "pr_count": 0
+      },
+      {
+        "id": "18462850472",
+        "date": "2026-05-11",
+        "start_local": "2026-05-11T07:10:25",
+        "name": "Morning Weight Training",
+        "sport_type": "WeightTraining",
+        "distance_m": 0,
+        "moving_time_s": 2888,
+        "elapsed_time_s": 2888,
+        "elevation_gain_m": 0,
+        "avg_speed_mps": 0,
+        "max_speed_mps": 0,
+        "avg_cadence": null,
+        "relative_effort": 7,
+        "calories": 267,
+        "achievement_count": 0,
+        "pr_count": 0
+      },
+      {
+        "id": "18455947833",
+        "date": "2026-05-10",
+        "start_local": "2026-05-10T12:35:54",
+        "name": "Lunch Weight Training",
+        "sport_type": "WeightTraining",
+        "distance_m": 0,
+        "moving_time_s": 4088,
+        "elapsed_time_s": 4088,
+        "elevation_gain_m": 0,
+        "avg_speed_mps": 0,
+        "max_speed_mps": 0,
+        "avg_cadence": null,
+        "relative_effort": 25,
+        "calories": 536,
+        "achievement_count": 0,
+        "pr_count": 0
+      },
+      {
+        "id": "18441607137",
+        "date": "2026-05-09",
+        "start_local": "2026-05-09T11:26:43",
+        "name": "Lunch Weight Training",
+        "sport_type": "WeightTraining",
+        "distance_m": 0,
+        "moving_time_s": 4078,
+        "elapsed_time_s": 4078,
+        "elevation_gain_m": 0,
+        "avg_speed_mps": 0,
+        "max_speed_mps": 0,
+        "avg_cadence": null,
+        "relative_effort": 19,
+        "calories": 476,
+        "achievement_count": 1,
+        "pr_count": 0
+      },
+      {
+        "id": "18431731172",
+        "date": "2026-05-08",
+        "start_local": "2026-05-08T19:21:23",
+        "name": "Evening Weight Training",
+        "sport_type": "WeightTraining",
+        "distance_m": 0,
+        "moving_time_s": 3530,
+        "elapsed_time_s": 3530,
+        "elevation_gain_m": 0,
+        "avg_speed_mps": 0,
+        "max_speed_mps": 0,
+        "avg_cadence": null,
+        "relative_effort": 13,
+        "calories": 390,
+        "achievement_count": 0,
+        "pr_count": 0
+      },
+      {
+        "id": "18412052965",
+        "date": "2026-05-07",
+        "start_local": "2026-05-07T07:59:49",
+        "name": "Morning Swim",
+        "sport_type": "Swim",
+        "distance_m": 1925,
+        "moving_time_s": 2389,
+        "elapsed_time_s": 3384,
+        "elevation_gain_m": 0,
+        "avg_speed_mps": 0.8058,
+        "max_speed_mps": 2.1,
+        "avg_cadence": null,
+        "relative_effort": 35,
+        "calories": 479,
+        "achievement_count": 0,
+        "pr_count": 0
+      },
+      {
+        "id": "18398164168",
+        "date": "2026-05-06",
+        "start_local": "2026-05-06T07:04:03",
+        "name": "Morning Weight Training",
+        "sport_type": "WeightTraining",
+        "distance_m": 0,
+        "moving_time_s": 3786,
+        "elapsed_time_s": 3786,
+        "elevation_gain_m": 0,
+        "avg_speed_mps": 0,
+        "max_speed_mps": 0,
+        "avg_cadence": null,
+        "relative_effort": 15,
+        "calories": 453,
+        "achievement_count": 0,
+        "pr_count": 0
+      },
+      {
+        "id": "18371030707",
+        "date": "2026-05-04",
+        "start_local": "2026-05-04T07:07:41",
+        "name": "Morning Weight Training",
+        "sport_type": "WeightTraining",
+        "distance_m": 0,
+        "moving_time_s": 3450,
+        "elapsed_time_s": 3450,
+        "elevation_gain_m": 0,
+        "avg_speed_mps": 0,
+        "max_speed_mps": 0,
+        "avg_cadence": null,
+        "relative_effort": 9,
+        "calories": 293,
+        "achievement_count": 0,
+        "pr_count": 0
+      }
     ]
   },
   "whoop": {
-    "connected": false,
-    "syncedAt": null,
-    "recovery": [],
-    "sleep": [],
-    "cycles": []
+    "connected": true,
+    "syncedAt": "2026-06-09T19:09:52.976Z",
+    "recovery": [
+      {
+        "date": "2026-05-16",
+        "recovery_score": 40,
+        "hrv_rmssd_ms": 53.5,
+        "resting_hr": 61,
+        "skin_temp_c": 34.2,
+        "spo2": 95.7
+      },
+      {
+        "date": "2026-05-17",
+        "recovery_score": 81,
+        "hrv_rmssd_ms": 66.7,
+        "resting_hr": 54,
+        "skin_temp_c": 33.1,
+        "spo2": 95.4
+      },
+      {
+        "date": "2026-05-18",
+        "recovery_score": 57,
+        "hrv_rmssd_ms": 57.6,
+        "resting_hr": 58,
+        "skin_temp_c": 33.1,
+        "spo2": 94.1
+      },
+      {
+        "date": "2026-05-19",
+        "recovery_score": 27,
+        "hrv_rmssd_ms": 47.9,
+        "resting_hr": 67,
+        "skin_temp_c": 34.3,
+        "spo2": 79
+      },
+      {
+        "date": "2026-05-20",
+        "recovery_score": 90,
+        "hrv_rmssd_ms": 69,
+        "resting_hr": 57,
+        "skin_temp_c": 32.9,
+        "spo2": 90.9
+      },
+      {
+        "date": "2026-05-21",
+        "recovery_score": 43,
+        "hrv_rmssd_ms": 46.3,
+        "resting_hr": 68,
+        "skin_temp_c": 33.6,
+        "spo2": 93
+      },
+      {
+        "date": "2026-05-22",
+        "recovery_score": 66,
+        "hrv_rmssd_ms": 56.1,
+        "resting_hr": 55,
+        "skin_temp_c": 33,
+        "spo2": 96.9
+      },
+      {
+        "date": "2026-05-23",
+        "recovery_score": 69,
+        "hrv_rmssd_ms": 58.1,
+        "resting_hr": 56,
+        "skin_temp_c": 33.3,
+        "spo2": 96.1
+      },
+      {
+        "date": "2026-05-24",
+        "recovery_score": 87,
+        "hrv_rmssd_ms": 65.9,
+        "resting_hr": 55,
+        "skin_temp_c": 32.5,
+        "spo2": 98.5
+      },
+      {
+        "date": "2026-05-25",
+        "recovery_score": 96,
+        "hrv_rmssd_ms": 73.8,
+        "resting_hr": 53,
+        "skin_temp_c": 33,
+        "spo2": 93
+      },
+      {
+        "date": "2026-05-26",
+        "recovery_score": 87,
+        "hrv_rmssd_ms": 68.5,
+        "resting_hr": 54,
+        "skin_temp_c": 33.1,
+        "spo2": 89.3
+      },
+      {
+        "date": "2026-05-27",
+        "recovery_score": 77,
+        "hrv_rmssd_ms": 71.1,
+        "resting_hr": 58,
+        "skin_temp_c": 33.6,
+        "spo2": null
+      },
+      {
+        "date": "2026-05-28",
+        "recovery_score": 39,
+        "hrv_rmssd_ms": 48.5,
+        "resting_hr": 53,
+        "skin_temp_c": 33.7,
+        "spo2": 95.4
+      },
+      {
+        "date": "2026-05-29",
+        "recovery_score": 55,
+        "hrv_rmssd_ms": 59.4,
+        "resting_hr": 56,
+        "skin_temp_c": 34,
+        "spo2": 92.5
+      },
+      {
+        "date": "2026-05-30",
+        "recovery_score": 58,
+        "hrv_rmssd_ms": 64.4,
+        "resting_hr": 54,
+        "skin_temp_c": 33.2,
+        "spo2": null
+      },
+      {
+        "date": "2026-05-31",
+        "recovery_score": 24,
+        "hrv_rmssd_ms": 37.7,
+        "resting_hr": 64,
+        "skin_temp_c": 33.9,
+        "spo2": 95.8
+      },
+      {
+        "date": "2026-06-01",
+        "recovery_score": 44,
+        "hrv_rmssd_ms": 51.3,
+        "resting_hr": 56,
+        "skin_temp_c": 32.9,
+        "spo2": 95.7
+      },
+      {
+        "date": "2026-06-02",
+        "recovery_score": 66,
+        "hrv_rmssd_ms": 58.5,
+        "resting_hr": 51,
+        "skin_temp_c": 32.8,
+        "spo2": 94.3
+      },
+      {
+        "date": "2026-06-03",
+        "recovery_score": 59,
+        "hrv_rmssd_ms": 55.5,
+        "resting_hr": 53,
+        "skin_temp_c": 33.9,
+        "spo2": 96
+      },
+      {
+        "date": "2026-06-04",
+        "recovery_score": 85,
+        "hrv_rmssd_ms": 66.1,
+        "resting_hr": 50,
+        "skin_temp_c": 33.6,
+        "spo2": 95.9
+      },
+      {
+        "date": "2026-06-05",
+        "recovery_score": 93,
+        "hrv_rmssd_ms": 71.4,
+        "resting_hr": 48,
+        "skin_temp_c": 33.3,
+        "spo2": 92.3
+      },
+      {
+        "date": "2026-06-06",
+        "recovery_score": 62,
+        "hrv_rmssd_ms": 59.5,
+        "resting_hr": 56,
+        "skin_temp_c": 34.2,
+        "spo2": 93.7
+      },
+      {
+        "date": "2026-06-07",
+        "recovery_score": 64,
+        "hrv_rmssd_ms": 59.9,
+        "resting_hr": 53,
+        "skin_temp_c": 33.1,
+        "spo2": 96.7
+      },
+      {
+        "date": "2026-06-08",
+        "recovery_score": 92,
+        "hrv_rmssd_ms": 72.6,
+        "resting_hr": 53,
+        "skin_temp_c": 33.6,
+        "spo2": 94.8
+      },
+      {
+        "date": "2026-06-09",
+        "recovery_score": 94,
+        "hrv_rmssd_ms": 75.6,
+        "resting_hr": 50,
+        "skin_temp_c": 33.4,
+        "spo2": 93.4
+      }
+    ],
+    "sleep": [
+      {
+        "date": "2026-05-17",
+        "sleep_performance_pct": 81,
+        "hours": 10.2,
+        "efficiency_pct": 96
+      },
+      {
+        "date": "2026-05-18",
+        "sleep_performance_pct": 79,
+        "hours": 6.4,
+        "efficiency_pct": 93
+      },
+      {
+        "date": "2026-05-19",
+        "sleep_performance_pct": 54,
+        "hours": 5.3,
+        "efficiency_pct": 84
+      },
+      {
+        "date": "2026-05-20",
+        "sleep_performance_pct": 81,
+        "hours": 7.3,
+        "efficiency_pct": 94
+      },
+      {
+        "date": "2026-05-21",
+        "sleep_performance_pct": 63,
+        "hours": 5.5,
+        "efficiency_pct": 86
+      },
+      {
+        "date": "2026-05-22",
+        "sleep_performance_pct": 82,
+        "hours": 7.6,
+        "efficiency_pct": 98
+      },
+      {
+        "date": "2026-05-23",
+        "sleep_performance_pct": 82,
+        "hours": 7.7,
+        "efficiency_pct": 98
+      },
+      {
+        "date": "2026-05-24",
+        "sleep_performance_pct": 87,
+        "hours": 7.9,
+        "efficiency_pct": 96
+      },
+      {
+        "date": "2026-05-25",
+        "sleep_performance_pct": 89,
+        "hours": 7.6,
+        "efficiency_pct": 98
+      },
+      {
+        "date": "2026-05-26",
+        "sleep_performance_pct": 85,
+        "hours": 7.1,
+        "efficiency_pct": 95
+      },
+      {
+        "date": "2026-05-27",
+        "sleep_performance_pct": 79,
+        "hours": 6.1,
+        "efficiency_pct": 94
+      },
+      {
+        "date": "2026-05-28",
+        "sleep_performance_pct": 85,
+        "hours": 7.8,
+        "efficiency_pct": 90
+      },
+      {
+        "date": "2026-05-29",
+        "sleep_performance_pct": 84,
+        "hours": 6.5,
+        "efficiency_pct": 95
+      },
+      {
+        "date": "2026-05-30",
+        "sleep_performance_pct": 67,
+        "hours": 5.2,
+        "efficiency_pct": 87
+      },
+      {
+        "date": "2026-05-31",
+        "sleep_performance_pct": 80,
+        "hours": 6.4,
+        "efficiency_pct": 94
+      },
+      {
+        "date": "2026-06-01",
+        "sleep_performance_pct": 78,
+        "hours": 6.1,
+        "efficiency_pct": 95
+      },
+      {
+        "date": "2026-06-02",
+        "sleep_performance_pct": 80,
+        "hours": 8,
+        "efficiency_pct": 97
+      },
+      {
+        "date": "2026-06-03",
+        "sleep_performance_pct": 85,
+        "hours": 7.4,
+        "efficiency_pct": 97
+      },
+      {
+        "date": "2026-06-04",
+        "sleep_performance_pct": 90,
+        "hours": 8,
+        "efficiency_pct": 97
+      },
+      {
+        "date": "2026-06-05",
+        "sleep_performance_pct": 89,
+        "hours": 7.4,
+        "efficiency_pct": 94
+      },
+      {
+        "date": "2026-06-06",
+        "sleep_performance_pct": 75,
+        "hours": 7.1,
+        "efficiency_pct": 87
+      },
+      {
+        "date": "2026-06-07",
+        "sleep_performance_pct": 81,
+        "hours": 8,
+        "efficiency_pct": 94
+      },
+      {
+        "date": "2026-06-08",
+        "sleep_performance_pct": 82,
+        "hours": 7.1,
+        "efficiency_pct": 98
+      },
+      {
+        "date": "2026-06-09",
+        "sleep_performance_pct": 82,
+        "hours": 6.8,
+        "efficiency_pct": 95
+      }
+    ],
+    "cycles": [
+      {
+        "date": "2026-05-16",
+        "day_strain": 13.7,
+        "avg_hr": 77,
+        "kilojoule": 9167
+      },
+      {
+        "date": "2026-05-17",
+        "day_strain": 15.7,
+        "avg_hr": 73,
+        "kilojoule": 12121
+      },
+      {
+        "date": "2026-05-18",
+        "day_strain": 17.3,
+        "avg_hr": 79,
+        "kilojoule": 12346
+      },
+      {
+        "date": "2026-05-19",
+        "day_strain": 11.6,
+        "avg_hr": 79,
+        "kilojoule": 10431
+      },
+      {
+        "date": "2026-05-20",
+        "day_strain": 7.6,
+        "avg_hr": 73,
+        "kilojoule": 9662
+      },
+      {
+        "date": "2026-05-21",
+        "day_strain": 13.7,
+        "avg_hr": 79,
+        "kilojoule": 9346
+      },
+      {
+        "date": "2026-05-22",
+        "day_strain": 12.9,
+        "avg_hr": 73,
+        "kilojoule": 9891
+      },
+      {
+        "date": "2026-05-23",
+        "day_strain": 12.6,
+        "avg_hr": 72,
+        "kilojoule": 10368
+      },
+      {
+        "date": "2026-05-24",
+        "day_strain": 15.3,
+        "avg_hr": 73,
+        "kilojoule": 11797
+      },
+      {
+        "date": "2026-05-25",
+        "day_strain": 14.5,
+        "avg_hr": 73,
+        "kilojoule": 11576
+      },
+      {
+        "date": "2026-05-26",
+        "day_strain": 12,
+        "avg_hr": 69,
+        "kilojoule": 9546
+      },
+      {
+        "date": "2026-05-27",
+        "day_strain": 5,
+        "avg_hr": 71,
+        "kilojoule": 7960
+      },
+      {
+        "date": "2026-05-28",
+        "day_strain": 5.2,
+        "avg_hr": 67,
+        "kilojoule": 9320
+      },
+      {
+        "date": "2026-05-29",
+        "day_strain": 8.7,
+        "avg_hr": 70,
+        "kilojoule": 9393
+      },
+      {
+        "date": "2026-05-30",
+        "day_strain": 18,
+        "avg_hr": 76,
+        "kilojoule": 14131
+      },
+      {
+        "date": "2026-05-31",
+        "day_strain": 15.7,
+        "avg_hr": 77,
+        "kilojoule": 11814
+      },
+      {
+        "date": "2026-06-01",
+        "day_strain": 12.7,
+        "avg_hr": 73,
+        "kilojoule": 8580
+      },
+      {
+        "date": "2026-06-02",
+        "day_strain": 5.7,
+        "avg_hr": 66,
+        "kilojoule": 9031
+      },
+      {
+        "date": "2026-06-03",
+        "day_strain": 11.6,
+        "avg_hr": 72,
+        "kilojoule": 10213
+      },
+      {
+        "date": "2026-06-04",
+        "day_strain": 13.2,
+        "avg_hr": 71,
+        "kilojoule": 10310
+      },
+      {
+        "date": "2026-06-05",
+        "day_strain": 14.2,
+        "avg_hr": 74,
+        "kilojoule": 12853
+      },
+      {
+        "date": "2026-06-06",
+        "day_strain": 18.1,
+        "avg_hr": 75,
+        "kilojoule": 13007
+      },
+      {
+        "date": "2026-06-07",
+        "day_strain": 13.8,
+        "avg_hr": 70,
+        "kilojoule": 9826
+      },
+      {
+        "date": "2026-06-08",
+        "day_strain": 12.4,
+        "avg_hr": 68,
+        "kilojoule": 8977
+      },
+      {
+        "date": "2026-06-09",
+        "day_strain": 7,
+        "avg_hr": 64,
+        "kilojoule": 6446
+      }
+    ]
   }
 }

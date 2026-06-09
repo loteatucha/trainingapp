@@ -87,18 +87,17 @@ curl -s -X POST https://api.prod.whoop.com/oauth/oauth2/token \
 ## Recurring sync (what "sync my data" does)
 
 Just tell Claude **"sync my training data"**. Claude will:
-1. Pull recent Strava activities via the Strava MCP.
-2. If WHOOP is connected: refresh the access token and pull recovery / sleep / cycles:
+1. Pull recent Strava activities via the Strava MCP and rewrite the `strava` block of `data.json`.
+2. Pull WHOOP recovery / sleep / cycles by running:
    ```bash
-   # refresh
-   curl -s -X POST https://api.prod.whoop.com/oauth/oauth2/token \
-     -d grant_type=refresh_token -d refresh_token=$RT \
-     -d client_id=$CID -d client_secret=$CS -d scope=offline
-   # then GET https://api.prod.whoop.com/developer/v1/recovery  (Bearer access_token)
+   node whoop-sync.js
    ```
-   (WHOOP rotates the refresh token on each refresh — Claude saves the new one back to `.secrets.json`.)
-3. Rewrite `data.json` (and flip `whoop.connected` to `true`).
-4. **Deploy:** `git add data.json && git commit && git push` → Pages serves the fresh data.
+   This refreshes the access token (WHOOP **rotates** the refresh token on every refresh — the
+   script saves the new one back to `.secrets.json`), fetches the WHOOP **v2** endpoints
+   (`/developer/v2/recovery`, `/developer/v2/activity/sleep`, `/developer/v2/cycle`), and rewrites
+   the `whoop` block with up to the 25 most-recent records each (flipping `whoop.connected` true).
+   Note: WHOOP **v1** is deprecated for recovery/sleep — use v2.
+3. **Deploy:** `git add data.json && git commit && git push` → Pages serves the fresh data.
 
 The app uses a network-first service worker and fetches `data.json` with `cache:'no-store'`,
 so a reload picks up new data immediately; offline, it shows the last synced copy.
