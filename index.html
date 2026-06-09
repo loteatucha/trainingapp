@@ -459,6 +459,12 @@
   .chart-foot { display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: baseline; margin-top: 8px; font-size: 12px; color: var(--muted); }
   .chart-foot b { color: var(--ink); font-size: 13px; font-weight: 700; }
 
+  /* Coach session banner on run/swim days */
+  .coach-banner { background: var(--accent-soft); border: 1px solid var(--accent); border-radius: 12px; padding: 10px 12px; margin-bottom: 12px; }
+  .coach-banner-head { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; flex-wrap: wrap; }
+  .coach-banner-phase { font-size: 10px; font-weight: 700; letter-spacing: 0.06em; color: var(--muted); text-transform: uppercase; }
+  .coach-banner-line { font-size: 14px; font-weight: 600; color: var(--ink); line-height: 1.4; }
+
   .footer { text-align: center; color: var(--muted); font-size: 11px; margin-top: 16px; }
   .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--accent-strong); color: #fff;
     padding: 12px 20px; border-radius: 999px; font-size: 13px; font-weight: 600; box-shadow: 0 8px 24px rgba(0,0,0,.4); opacity: 0;
@@ -825,7 +831,6 @@ const WORKOUT_OPTIONS = [
   { key: 'run-intervals', workout: { type: 'run', variant: 'intervals' } },
   { key: 'run-long',      workout: { type: 'run', variant: 'long' } },
   { key: 'swim',          workout: { type: 'swim' } },
-  { key: 'yoga',          workout: { type: 'yoga' } },
   { key: 'rest',          workout: { type: 'rest' } }
 ];
 function keyOf(w) {
@@ -944,17 +949,17 @@ function renderToday(iso) {
   updateProgress();
 
   function updateProgress() {
-    const p = computeTodayProgress(sched, log);
+    const p = computeTodayProgress(sched, log, iso);
     fill.style.width = p.pct + '%';
     pPct.textContent = p.pct + '%';
     plText.textContent = p.label;
   }
 }
 
-function computeTodayProgress(sched, log) {
+function computeTodayProgress(sched, log, iso) {
   const w = log.workout;
-  if (sched.type === 'run') {
-    // Run is logged as a whole (no per-stage tracking) → progress follows done state
+  if (sched.type === 'run' || (sched.type === 'swim' && coachWeekIndexForISO(iso) >= 0)) {
+    // logged as a whole (no per-stage tracking) → progress follows done state
     const isDone = (w && w.status === 'done');
     return { pct: isDone ? 100 : 0, label: isDone ? 'Session complete' : 'Session pending' };
   }
@@ -1773,9 +1778,45 @@ function makeSetRow(s, i, timeBased, lastSet) {
   return row;
 }
 
+// ---- Coach plan → run/swim session for a given day (current week) ----
+function coachWeekIndexForISO(iso) {
+  const plan = state.plan;
+  if (!plan || !plan.weeksPlan) return -1;
+  return plan.weeksPlan.findIndex(w => iso >= w.start && iso <= w.end);
+}
+function coachSessionForISO(iso, type, variant) {
+  const idx = coachWeekIndexForISO(iso);
+  if (idx < 0) return null;
+  const wk = state.plan.weeksPlan[idx];
+  let line = null;
+  if (type === 'run')       line = (variant === 'long' ? (wk.run && wk.run[0]) : (wk.run && wk.run[1])) || (wk.run && wk.run[0]);
+  else if (type === 'swim') line = wk.swim && wk.swim[0];
+  if (!line) return null;
+  return { weekNo: wk.week, weeks: state.plan.weeks, phase: wk.phase, line };
+}
+function coachRunTargets(line) {
+  const km = (line.match(/(\d+(?:\.\d+)?)\s*km/i) || [])[1];
+  const min = (line.match(/(\d+)\s*min/i) || [])[1];
+  return { distance: km || '', duration: min ? min + ':00' : '' };
+}
+function coachSwimMeters(line) {
+  const m = (line.match(/([\d,]+)\s*m\b/i) || [])[1];
+  return m ? m.replace(/,/g, '') : '';
+}
+function coachBanner(sess) {
+  const b = el('div', 'coach-banner');
+  const h = el('div', 'coach-banner-head');
+  h.appendChild(el('span', 'pill', `🎯 Coach · Week ${sess.weekNo}/${sess.weeks}`));
+  if (sess.phase) h.appendChild(el('span', 'coach-banner-phase', sess.phase));
+  b.appendChild(h);
+  b.appendChild(el('div', 'coach-banner-line', sess.line));
+  return b;
+}
+
 function renderRunBody(container, variant, iso, log, onChange) {
   const w = ensureWorkout(log, { type: 'run' });
   const routine = getRunRoutine(variant);
+  const coach = coachSessionForISO(iso, 'run', variant);
   const fields = w.fields;
   const lastRun = lastTypeSession('run', iso);
 
@@ -1786,13 +1827,14 @@ function renderRunBody(container, variant, iso, log, onChange) {
     fields.avgPace = (km > 0 && !isNaN(durMin) && durMin > 0) ? secondsToPace(Math.round(durMin * 60 / km)) : '';
   };
 
-  // While the session is still open, pre-fill distance/duration from the plan
-  // target (falling back to the last run) so there's less to type.
+  // While the session is still open, pre-fill distance/duration from the Coach
+  // plan target (falling back to the static routine / last run) so there's less to type.
   if (w.status !== 'done') {
     let changed = false;
     if (!fields.distance && !fields.duration) {
-      fields.distance = routine.targetDistance || (lastRun && lastRun.fields.distance) || '';
-      fields.duration = routine.targetDuration || (lastRun && lastRun.fields.duration) || '';
+      const ct = coach ? coachRunTargets(coach.line) : null;
+      fields.distance = (ct && ct.distance) || routine.targetDistance || (lastRun && lastRun.fields.distance) || '';
+      fields.duration = (ct && ct.duration) || routine.targetDuration || (lastRun && lastRun.fields.duration) || '';
       changed = !!(fields.distance || fields.duration);
     }
     const prevPace = fields.avgPace;
@@ -1800,6 +1842,7 @@ function renderRunBody(container, variant, iso, log, onChange) {
     if (changed || fields.avgPace !== prevPace) saveState();
   }
 
+  if (coach) container.appendChild(coachBanner(coach));
   if (lastRun) appendLastSession(container, lastRun, iso, 'run');
 
   const ig = el('div', 'input-grid');
@@ -1841,10 +1884,16 @@ function renderRunBody(container, variant, iso, log, onChange) {
 
 function renderSwimBody(container, iso, log, onChange) {
   const w = ensureWorkout(log, { type: 'swim' });
+  const coach = coachSessionForISO(iso, 'swim');
   const lastSwim = lastTypeSession('swim', iso);
-  if (lastSwim) appendLastSession(container, lastSwim, iso, 'swim');
 
   const f = w.fields;
+  if (coach) {
+    container.appendChild(coachBanner(coach));
+    if (w.status !== 'done' && !f.distance) { const m = coachSwimMeters(coach.line); if (m) { f.distance = m; saveState(); } }
+  }
+  if (lastSwim) appendLastSession(container, lastSwim, iso, 'swim');
+
   const ig = el('div', 'input-grid');
   ig.appendChild(pickerField('Distance',
     () => f.distance ? f.distance + ' m' : '',
@@ -1862,7 +1911,8 @@ function renderSwimBody(container, iso, log, onChange) {
   ));
   container.appendChild(ig);
 
-  renderRoutineExercises(container, getSwim(), iso, log, { trackSets: false, onChange });
+  // Static swim checklist only when not following the Coach plan (e.g. after the block ends)
+  if (!coach) renderRoutineExercises(container, getSwim(), iso, log, { trackSets: false, onChange });
   container.appendChild(notesArea(w, 'Session notes'));
 }
 
@@ -2471,44 +2521,28 @@ function renderPlan() {
   const root = document.getElementById('tab-plan');
   root.innerHTML = '';
 
-  // Auto-init customs so editing is always live
-  if (!state.customGym)          { state.customGym          = JSON.parse(JSON.stringify(DEFAULT_GYM));          saveState(); }
-  if (!state.customRunIntervals) { state.customRunIntervals = JSON.parse(JSON.stringify(DEFAULT_RUN_INTERVALS)); saveState(); }
-  if (!state.customRunLong)      { state.customRunLong      = JSON.parse(JSON.stringify(DEFAULT_RUN_LONG));      saveState(); }
-  if (!state.customSwim)         { state.customSwim         = JSON.parse(JSON.stringify(DEFAULT_SWIM));         saveState(); }
-  if (!state.customYoga)         { state.customYoga         = JSON.parse(JSON.stringify(DEFAULT_YOGA));         saveState(); }
+  // Auto-init gym customs so editing is always live
+  if (!state.customGym) { state.customGym = JSON.parse(JSON.stringify(DEFAULT_GYM)); saveState(); }
 
   // Intro
   const intro = el('div', 'card');
-  intro.appendChild(el('h2', null, 'Week routines'));
-  intro.appendChild(el('div', 'muted', 'The 7 templates you can train on. Tap any to edit. The Week tab decides which day they fall on.'));
+  intro.appendChild(el('h2', null, 'Gym routines'));
+  intro.appendChild(el('div', 'muted', 'Your 3 gym day templates — tap any to edit. Running & swimming follow your Coach plan (see the Coach tab).'));
   root.appendChild(intro);
 
-  // 1–3: Gym days
+  // Gym days
   state.customGym.forEach((day, dIdx) => {
     root.appendChild(renderRoutineBox('🏋️', day, () => { saveState(); renderPlan(); }, { open: dIdx === 0 }));
   });
-  // 4: Run Intervals
-  root.appendChild(renderRoutineBox('🏃', state.customRunIntervals, () => { saveState(); renderPlan(); }, { targets: true }));
-  // 5: Run Long
-  root.appendChild(renderRoutineBox('🏃', state.customRunLong, () => { saveState(); renderPlan(); }, { targets: true }));
-  // 6: Swim
-  root.appendChild(renderRoutineBox('🏊', state.customSwim, () => { saveState(); renderPlan(); }));
-  // 7: Yoga (simplified)
-  root.appendChild(renderYogaBox(state.customYoga));
 
   // Global reset
   const resetCard = el('div', 'card');
-  const resetBtn = el('button', 'btn small ghost danger', 'Reset all routines to defaults');
+  const resetBtn = el('button', 'btn small ghost danger', 'Reset gym routines to defaults');
   resetBtn.addEventListener('click', () => {
-    if (!confirm('Discard all custom routines and reset to defaults?')) return;
+    if (!confirm('Discard your gym edits and reset to the default templates?')) return;
     state.customGym = null;
-    state.customRunIntervals = null;
-    state.customRunLong = null;
-    state.customSwim = null;
-    state.customYoga = null;
     saveState(); renderPlan();
-    toast('All routines reset');
+    toast('Gym routines reset');
   });
   resetCard.appendChild(resetBtn);
   root.appendChild(resetCard);
@@ -3404,6 +3438,8 @@ async function loadPlanData() {
     state.plan = await res.json();
     const coach = document.getElementById('tab-coach');
     if (coach && coach.style.display !== 'none') renderCoachPlan();
+    const today = document.getElementById('tab-today');
+    if (today && today.style.display !== 'none') renderToday(state.viewISO);
   } catch (e) { /* no plan yet — ignore */ }
 }
 
